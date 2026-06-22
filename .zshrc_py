@@ -1,0 +1,28 @@
+# --------------------------------------------------------
+# REPO RIPPER PLATFORM COMMAND MATRIX (v4.0 Enterprise)
+# --------------------------------------------------------
+alias rip="python3 ~/repo_ripper.py ."
+alias riplist="python3 ~/repo_ripper.py . --list"
+alias riprules="python3 ~/repo_ripper.py . --rules --copy"
+alias ripsig="python3 ~/repo_ripper.py . --sig --copy"
+alias ripapply="python3 ~/repo_ripper.py . --apply"
+
+# Context Scraper: Packs local repository context + appends strict prompt parameters
+ripc() {
+    python3 ~/repo_ripper.py . --copy
+    (pbpaste; echo -e "\n\n========================================================\nSTRICT RESPONSE CONSTRAINTS FOR THE AI ASSISTANT:\nIf the user asks for code modifications, bug fixes, or file rewrites, you MUST structure your recommendations explicitly using the Text-Anchor SEARCH/REPLACE paradigm template outlined below.\nDo not use unified git diff line coordinates. Output your patch blocks exactly inside standard markdown blocks using this format:\n\n#FILE: path/to/file.ext\n<<<<<<< SEARCH\nExact existing lines of code to match in target file\n=======\nNew replacement lines of code to inject\n>>>>>>> REPLACE\n========================================================") | pbcopy
+    echo "Success: Context map + AI Execution instructions loaded to clipboard."
+}
+
+ripmr() {
+    python3 ~/repo_ripper.py . --mr "$1" --copy
+}
+ripbreak() {
+    python3 ~/repo_ripper.py . --trace "$1" --copy
+}
+
+# Senior Git Navigation Pack
+alias gd='git diff'
+alias gs='git status'
+alias gp='git pull'
+alias gr='git restore .'
