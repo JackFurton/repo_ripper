@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Repo Ripper v3.10 - Ultimate LLM Local Software Tool
-# Long-Term Solution: Autonomous Text-Anchor SEARCH/REPLACE Block Engine
-# Added Native Scratch-File Generation Hook for Projects Built From Scratch
+# Repo Ripper v3.11 - Ultimate LLM Local Software Tool
+# The "I Forgot To Actually Append The Text Lines" Patched Edition
 
 show_help() {
     echo "========================================================"
@@ -356,13 +355,16 @@ for line in lines:
             print("Error: Block encountered before specifying a valid #FILE: marker path string.")
             continue
             
+        s_str = "\n".join(search_block)
+        r_str = "\n".join(replace_block)
+
         if not os.path.exists(current_file):
-            if not search_block:
+            if not s_str:
                 dirname = os.path.dirname(current_file)
                 if dirname:
                     os.makedirs(dirname, exist_ok=True)
                 with open(current_file, "w", encoding="utf-8") as nf:
-                    nf.write("\n".join(replace_block))
+                    nf.write(r_str + "\n")
                 print(f"Success: Spawned brand new file asset from scratch: {current_file}")
                 applied_count += 1
                 continue
@@ -373,9 +375,6 @@ for line in lines:
         with open(current_file, "r", encoding="utf-8", errors="ignore") as f:
             f_content = f.read()
             
-        s_str = "\n".join(search_block)
-        r_str = "\n".join(replace_block)
-        
         if s_str in f_content:
             f_content = f_content.replace(s_str, r_str)
             with open(current_file, "w", encoding="utf-8") as f:
@@ -384,6 +383,12 @@ for line in lines:
             applied_count += 1
         else:
             print(f"Error: Text-Anchor matching failed. SEARCH block string context not found in: {current_file}")
+    else:
+        # THE MISSING PIECE: Actually record the lines into the parsing state tracking lists!
+        if state == "SEARCH":
+            search_block.append(line)
+        elif state == "REPLACE":
+            replace_block.append(line)
 
 if applied_count > 0:
     print(f"\nExecution Complete: Successfully synchronized {applied_count} codebase partitions.")
