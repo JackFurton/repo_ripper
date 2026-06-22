@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Repo Ripper v3.6 - Ultimate LLM Local Software Tool
-# Integrated Active Agentic Write Engine Layer (--apply)
+# Repo Ripper v3.7 - Ultimate LLM Local Software Tool
+# Added Web Copy Sanitization Layer to automatically wipe hidden non-breaking spaces.
 
 show_help() {
     echo "========================================================"
@@ -35,7 +35,6 @@ show_help() {
     exit 0
 }
 
-# 1. Safety Guardrail: Check basic invocation parameters
 if [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]]; then
     show_help
 fi
@@ -51,7 +50,6 @@ shift
 
 REAL_TARGET=$(cd "$TARGET_DIR" && pwd)
 
-# Extract clip modifiers before pipeline execution
 COPY_TO_CLIPBOARD=false
 CLEANED_ARGS=()
 for arg in "$@"; do
@@ -74,7 +72,6 @@ is_sensitive_file() {
 generate_payload() {
     cd "$REAL_TARGET" || exit
 
-    # Smart Isolation Engine: Determine if directory hierarchy output should be suppressed
     local SUPPRESS_MACRO=false
     for arg in "${CLEANED_ARGS[@]}"; do
         if [[ "$arg" == "--list" || "$arg" == "--focus" || "$arg" == "--mr" || "$arg" == "--trace" || "$arg" == "--apply" ]]; then
@@ -82,7 +79,6 @@ generate_payload() {
         fi
     done
 
-    # Exclusive Micro Mode Intercept: Focus
     if [[ "${CLEANED_ARGS[0]}" == "--focus" ]]; then
         echo '```markdown'
         echo "# REPO RIPPER TARGETED FOCUS PAYLOAD"
@@ -122,7 +118,6 @@ generate_payload() {
         return
     fi
 
-    # Standard Output Document Base
     echo '```markdown'
     echo "# REPO RIPPER CONTEXT COMPANION"
     echo "Primary Target: $REAL_TARGET"
@@ -329,12 +324,11 @@ generate_payload() {
                 ;;
             --apply)
                 echo -e "\n## ACTIVE REPO WORKSPACE WRITE EXECUTION INITIALIZED"
-                # Extract unified diff components cleanly out of the pasteboard string buffer
                 if command -v pbpaste &> /dev/null; then
-                    pbpaste | sed -n '/^diff --git/,/^\(diff --git\|```\|$\)/p' | grep -v '^```' > workspace.patch
+                    # CRITICAL BUG FIX: Force clean any web-copied non-breaking byte spaces (\xC2\xA0) into normal standard spaces
+                    pbpaste | sed $'s/\xC2\xA0/ /g' | sed -n '/^diff --git/,/^\(diff --git\|```\|$\)/p' | grep -v '^```' > workspace.patch
                     if [ ! -s workspace.patch ] || ! grep -q "^diff --git" workspace.patch; then
-                        # Try loose capture if markdown wrapping blocks were omitted by the AI
-                        pbpaste > workspace.patch
+                        pbpaste | sed $'s/\xC2\xA0/ /g' > workspace.patch
                     fi
                     
                     if grep -q "^diff --git" workspace.patch; then
@@ -381,7 +375,6 @@ generate_payload() {
     echo '```'
 }
 
-# Output Route Interceptor Execution
 if [ "$COPY_TO_CLIPBOARD" = true ]; then
     if command -v pbcopy &> /dev/null; then
         generate_payload "${CLEANED_ARGS[@]}" | pbcopy
