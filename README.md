@@ -1,38 +1,39 @@
-# Repo Ripper (v3.11)
+# Repo Ripper (v4.0 Enterprise)
 
 ### Secure Local AI Context Harvester & Text-Anchor Execution Engine
 
-Repo Ripper is a zero-dependency, local workspace companion designed for secure, air-gapped environment engineering. It solves two major compliance bottlenecks: securely gathering repository context for AI assistants without leaking sensitive credentials, and automatically applying code fixes to your workspace without manual copy-pasting or editor drift.
+Repo Ripper is a zero-dependency, native Python CLI workspace companion engineered specifically for secure, air-gapped environments. It solves the critical trade-off between leverage and compliance by harvesting precise codebase context frames for Large Language Models and safely executing code updates locally via a line-agnostic text-anchor engine—all without installing insecure external binaries or streaming repository telemetry outside your network boundary.
 
 ---
 
-## Core Features & Architecture
+## Core System Architecture
 
-* **Tokenless Remote Discovery:** Scrapes live merge/pull request references straight from the remote origin server without passing API tokens or checked-out branches.
-* **The Secret Shield:** Automatically detects and blocks plaintext security assets (`.env`, `.tfvars`, `.pem`, private keys, cloud service account json files) from entering your clipboard string.
-* **Diagnostic Crash Tracer:** Intercepts raw terminal logs, isolates failing code assets, and extracts matching localized code windows (+/-10 lines) for immediate debugging context.
-* **Autonomous Write Layer:** Features an embedded Python execution parsing engine that translates text-anchor `SEARCH/REPLACE` strings directly into local code modifications, completely wiping browser space-encoding traps (`\xa0`) behind the scenes.
+* **Object-Oriented Execution Base:** Built using a purely native Python 3 standard library framework, completely eliminating fragile shell escaping and multi-layered string interpreter nesting.
+* **Tokenless Remote Tracking:** Scrapes open pull/merge requests directly off the tracking origin server, building line-by-line patch analysis grids into your context without storing or passing API tokens.
+* **The Secret Shield:** Features localized security hooks that scan and automatically suppress plaintext credential assets (`.env`, `.tfvars`, `.pem`, private keys, cloud service account json blocks) from entering the clipboard buffer.
+* **Indentation & Byte-Trap Defense:** Natively strips out non-breaking web browser byte artifacts (`\xa0`) during clipboard ingestion, maintaining flawless indentation structures across whitespace-sensitive files (YAML, Python, Terraform).
+* **Line-Agnostic Engine:** Completely bypasses traditional diff coordinate line numbers (`@@ -1,5 +1,12 @@`), utilizing string match-blocks that remain 100% resilient even if a file shifts or changes elsewhere.
 
 ---
 
 ## Terminal Command Center Stack
 
-Adding the proper profile mappings to your local environment grants access to these macro shortcuts:
+Exposing the platform shortcuts inside your environment grants lightning-fast macro access:
 
-### 1. Context Harvesting (Read-Only Matrix)
-* `rip`: Runs a quick local sweep of the active directory hierarchy and includes primary top-level configurations.
-* `ripc`: Captures the entire workspace frame **and automatically appends execution constraints** directly to your macOS clipboard. Use this before hopping into your AI chat window.
-* `riplist`: Runs tokenless remote discovery to view all live open MR/PR IDs on the contract repository.
-* `riprules`: Safely pulls down local compliance playbooks, lint specifications, and naming conventions into your active clipboard buffer.
-* `ripsig`: Compiles a rapid interface summary of functions, global modules, and variable footprints.
+### 1. Read-Only Context Harvesting
+* `rip`: Runs a swift localized inventory sweep of your directory tree and reads top-level module maps.
+* `ripc`: Captures your full codebase structure and **automatically appends strict systemic prompt parameters** directly to your macOS clipboard. Use this before jumping to your AI window.
+* `riplist`: Queries remote branches to instantly view open MR/PR tracker IDs on the contract server.
+* `riprules`: Gathers engineering compliance playbooks, lint configurations, and naming criteria into your pasteboard buffer.
+* `ripsig`: Compiles a rapid interface summary of variables, functions, and exposed module layouts.
 
 ### 2. Micro Triage & Code Analysis
-* `ripmr <id>`: Pulls down a specific remote merge request delta, constructs a line-by-line patch analysis, and loads the code frame directly to your clipboard.
-* `ripbreak <path/to/log.txt or raw text>`: Feeds runtime crash dumps directly to the script to isolate code breaks and pull immediate workspace frames.
-* `vim hotkey (,c)`: While inside a source file, pressing `,c` pulls the full layout profile of that active buffer directly into your clipboard.
+* `ripmr <id>`: Evaluates a specific remote merge request delta, maps out line changes, and loads the context straight to your clipboard.
+* `ripbreak <path/to/log.txt or raw text>`: Feeds terminal error stack traces directly into the engine to automatically isolate breaking code frames and extract matching localized code windows (+/-10 lines).
+* `Vim Hotkey (,c)`: Pressing `,c` while inside a Vim buffer instantly extracts that file's full profile map into your clipboard workspace.
 
-### 3. Agentic Modification (Active Write Layer)
-* `ripapply`: Intercepts custom AI `SEARCH/REPLACE` text blocks sitting on your clipboard, checks integrity, and drops the modifications safely onto your computer's local disk files.
+### 3. Agentic Write Modifications
+* `ripapply`: Intercepts structured AI text-patches sitting on your clipboard, verifies structural integrity, auto-creates folders if building a project from scratch, and cleanly drops the updates onto your computer's disk.
 
 ---
 
@@ -49,16 +50,16 @@ Adding the proper profile mappings to your local environment grants access to th
             └─────────── [ Mac Clipboard ] <───────────┘
 ```
 
-1. **Harvest:** Enter your branch and run `ripc`. Your context map and structural generation rules are now sitting on your clipboard.
-2. **Consult:** Paste (**Cmd+V**) the context directly to the AI window and describe your ticket objective.
-3. **Capture:** The AI generates a fix wrapped inside a strict markdown schema. Click **Copy** on that response block.
-4. **Yeet:** Flip back to your terminal window and type `ripapply`. The script handles directory building, matching, and file updates instantly.
+1. **Harvest:** Navigate into your branch and run `ripc`. Your context footprint and prompt constraints are now loaded on your clipboard.
+2. **Consult:** Paste (**Cmd+V**) the payload directly to the AI window and describe your ticket objective.
+3. **Capture:** The AI writes out a modification wrapped inside your exact text-anchor block format. Click **Copy** on that response window.
+4. **Execute:** Return to your local terminal and run `ripapply`. The script instantly synchronizes the file layouts on disk.
 
 ---
 
 ## The AI Structural Patch Template
 
-Because your `ripc` command teaches the AI how your workspace operates, the model will always respond using this exact "text sandwich" template:
+Because your `ripc` execution teaches the model how your workspace operates, the AI will always respond utilizing this exact, merge-conflict-inspired text schema:
 
 ```text
 #FILE: path/to/your/target_file.tf
@@ -75,4 +76,4 @@ Because your `ripc` command teaches the AI how your workspace operates, the mode
 ```
 
 > ### The Scratch File Pattern
-> If you are building a new project from scratch, the AI will specify the target file path in the `#FILE:` tag, leave the `<<<<<<< SEARCH` section entirely blank, and output the total new codebase structure inside the `REPLACE` frame. Running `ripapply` will automatically spawn the required directory tree and generate the fresh configuration asset seamlessly.
+> When creating brand-new files from scratch, the AI will state the path in the `#FILE:` tag, leave the `<<<<<<< SEARCH` section entirely blank, and output the total new architecture layout inside the `REPLACE` section. Running `ripapply` detects this pattern, automatically constructs the missing directory tree paths, and spawns the fresh file asset onto your computer cleanly.
