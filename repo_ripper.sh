@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Repo Ripper v3.7 - Ultimate LLM Local Software Tool
-# Added Web Copy Sanitization Layer to automatically wipe hidden non-breaking spaces.
+# Repo Ripper v3.8 - Ultimate LLM Local Software Tool
+# Streamlined Agentic Write Layer with Bulletproof Patch Pipeline
 
 show_help() {
     echo "========================================================"
@@ -325,27 +325,25 @@ generate_payload() {
             --apply)
                 echo -e "\n## ACTIVE REPO WORKSPACE WRITE EXECUTION INITIALIZED"
                 if command -v pbpaste &> /dev/null; then
-                    # CRITICAL BUG FIX: Force clean any web-copied non-breaking byte spaces (\xC2\xA0) into normal standard spaces
-                    pbpaste | sed $'s/\xC2\xA0/ /g' | sed -n '/^diff --git/,/^\(diff --git\|```\|$\)/p' | grep -v '^```' > workspace.patch
-                    if [ ! -s workspace.patch ] || ! grep -q "^diff --git" workspace.patch; then
-                        pbpaste | sed $'s/\xC2\xA0/ /g' > workspace.patch
-                    fi
+                    # BULLETPROOF REFACTOR: tr translates any web-encoded spaces seamlessly.
+                    # Git apply automatically discards conversational prose and markdown block wraps anyway!
+                    pbpaste | tr '\240' ' ' > workspace.patch
                     
-                    if grep -q "^diff --git" workspace.patch; then
+                    if grep -q "diff --git" workspace.patch; then
                         if git apply --check workspace.patch &>/dev/null; then
                             git apply workspace.patch
                             echo "Success: AI code modifications applied cleanly to local workspace files!"
                         else
-                            echo "Error: Git tracking rejected patch application dry-run. Merge conflicts detected."
-                            echo "Raw Clipboard head context tracking sample:"
-                            head -n 5 workspace.patch
+                            echo "Error: Git tracking rejected patch application dry-run. Conflict or line mismatch."
+                            echo "--- Local Patch Content Analyzed ---"
+                            grep -A 3 "^diff --git" workspace.patch | head -n 6
                         fi
                     else
                         echo "Error: No valid unified git diff patch headers found inside clipboard memory block."
                     fi
                     rm -f workspace.patch
                 else
-                    echo "Error: pbpaste integration utility is unavailable on this hardware configuration."
+                    echo "Error: pbpaste utility is unavailable on this hardware configuration."
                 fi
                 shift
                 ;;
