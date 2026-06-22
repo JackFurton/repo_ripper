@@ -1,5 +1,5 @@
 # --------------------------------------------------------
-# REPO RIPPER PLATFORM COMMAND MATRIX (v4.0 Enterprise)
+# REPO RIPPER PLATFORM COMMAND MATRIX (v4.1 Enterprise)
 # --------------------------------------------------------
 alias rip="python3 ~/repo_ripper.py ."
 alias ripapply="python3 ~/repo_ripper.py . --apply"
@@ -7,7 +7,11 @@ alias riplist="python3 ~/repo_ripper.py . --list"
 alias riprules="python3 ~/repo_ripper.py . --rules --copy"
 alias ripsig="python3 ~/repo_ripper.py . --sig --copy"
 
-# Context Scraper: Switched natively to the new Python CLI backend
+# NEW MACROS: Fast engineering validation
+alias ripdiff="python3 ~/repo_ripper.py . --diff"
+alias rippr="python3 ~/repo_ripper.py . --pr --copy"
+
+# Context Scraper: Automatically loads context + prompt templates
 ripc() {
     python3 ~/repo_ripper.py . --copy
     (pbpaste; echo -e "\n\n========================================================\nSTRICT RESPONSE CONSTRAINTS FOR THE AI ASSISTANT:\nIf the user asks for code modifications, bug fixes, or file rewrites, you MUST structure your recommendations explicitly using the Text-Anchor SEARCH/REPLACE paradigm template outlined below.\nDo not use unified git diff line coordinates. Output your patch blocks exactly inside standard markdown blocks using this format:\n\n#FILE: path/to/file.ext\n<<<<<<< SEARCH\nExact existing lines of code to match in target file\n=======\nNew replacement lines of code to inject\n>>>>>>> REPLACE\n========================================================") | pbcopy
@@ -22,8 +26,7 @@ ripbreak() {
     python3 ~/repo_ripper.py . --trace "$1" --copy
 }
 
-# Senior Git Navigation Pack
+#git
 alias gd='git diff'
-alias gs='git status'
 alias gp='git pull'
-alias gr='git restore .'
+alias gs='git status'
