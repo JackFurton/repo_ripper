@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Repo Ripper v3.8 - Ultimate LLM Local Software Tool
-# Streamlined Agentic Write Layer with Bulletproof Patch Pipeline
+# Repo Ripper v3.10 - Ultimate LLM Local Software Tool
+# Long-Term Solution: Autonomous Text-Anchor SEARCH/REPLACE Block Engine
+# Added Native Scratch-File Generation Hook for Projects Built From Scratch
 
 show_help() {
     echo "========================================================"
@@ -25,8 +26,8 @@ show_help() {
     echo "  --focus <file1 ...> Dump the FULL content of specific files or folders"
     echo "  --trace <log/text>  Parse an error log/stack trace, isolate failing files and"
     echo "                      line numbers, and dump exact code context windows (+/-10 lines)"
-    echo "  --apply             Safely parse a unified git diff patch directly off your macOS"
-    echo "                      clipboard and merge code updates cleanly into local files"
+    echo "  --apply             Safely parse a text-anchor SEARCH/REPLACE block directly off"
+    echo "                      your macOS clipboard and merge code updates cleanly into local files"
     echo ""
     echo "Power Tool Modifiers:"
     echo "  --copy              Pipe the entire generated markdown block straight to the"
@@ -323,24 +324,73 @@ generate_payload() {
                 shift 2
                 ;;
             --apply)
-                echo -e "\n## ACTIVE REPO WORKSPACE WRITE EXECUTION INITIALIZED"
+                echo -e "\n## ACTIVE AGENTIC TEXT-ANCHOR WRITE EXECUTION INITIALIZED"
                 if command -v pbpaste &> /dev/null; then
-                    # BULLETPROOF REFACTOR: tr translates any web-encoded spaces seamlessly.
-                    # Git apply automatically discards conversational prose and markdown block wraps anyway!
                     pbpaste | tr '\240' ' ' > workspace.patch
                     
-                    if grep -q "diff --git" workspace.patch; then
-                        if git apply --check workspace.patch &>/dev/null; then
-                            git apply workspace.patch
-                            echo "Success: AI code modifications applied cleanly to local workspace files!"
-                        else
-                            echo "Error: Git tracking rejected patch application dry-run. Conflict or line mismatch."
-                            echo "--- Local Patch Content Analyzed ---"
-                            grep -A 3 "^diff --git" workspace.patch | head -n 6
-                        fi
-                    else
-                        echo "Error: No valid unified git diff patch headers found inside clipboard memory block."
-                    fi
+                    python3 -c '
+import sys, os
+
+with open("workspace.patch", "r", encoding="utf-8", errors="ignore") as pf:
+    content = pf.read().replace("\r\n", "\n")
+
+lines = content.splitlines()
+current_file = None
+search_block = []
+replace_block = []
+state = "OUTSIDE"
+applied_count = 0
+
+for line in lines:
+    if line.startswith("#FILE:"):
+        current_file = line.replace("#FILE:", "").strip()
+    elif line.startswith("<<<<<<< SEARCH"):
+        state = "SEARCH"
+        search_block = []
+    elif line.startswith("======="):
+        state = "REPLACE"
+        replace_block = []
+    elif line.startswith(">>>>>>> REPLACE"):
+        state = "OUTSIDE"
+        if not current_file:
+            print("Error: Block encountered before specifying a valid #FILE: marker path string.")
+            continue
+            
+        # NEW CRITICAL EDGE CASE MAPPING: If file doesn not exist and search block is blank, spawn it!
+        if not os.path.exists(current_file):
+            if not search_block:
+                dirname = os.path.dirname(current_file)
+                if dirname:
+                    os.makedirs(dirname, exist_ok=True)
+                with open(current_file, "w", encoding="utf-8") as nf:
+                    nf.write("\n".join(replace_block))
+                print(f"Success: Spawned brand new file asset from scratch: {current_file}")
+                applied_count += 1
+                continue
+            else:
+                print(f"Error: Target file reference does not exist on disk: {current_file}")
+                continue
+                
+        with open(current_file, "r", encoding="utf-8", errors="ignore") as f:
+            f_content = f.read()
+            
+        s_str = "\n".join(search_block)
+        r_str = "\n".join(replace_block)
+        
+        if s_str in f_content:
+            f_content = f_content.replace(s_str, r_str)
+            with open(current_file, "w", encoding="utf-8") as f:
+                f.write(f_content)
+            print(f"Success: Seamlessly patched file asset: {current_file}")
+            applied_count += 1
+        else:
+            print(f"Error: Text-Anchor matching failed. SEARCH block string context not found in: {current_file}")
+
+if applied_count > 0:
+    print(f"\nExecution Complete: Successfully synchronized {applied_count} codebase partitions.")
+else:
+    print("\nAborted: No modifications were made. Ensure clipboard layout conforms to SEARCH/REPLACE schemas.")
+'
                     rm -f workspace.patch
                 else
                     echo "Error: pbpaste utility is unavailable on this hardware configuration."
@@ -360,7 +410,7 @@ generate_payload() {
                     find . -maxdepth 2 -not -path '--stitch' | sort | sed 's/[^ -][^\/]*\//    /g' | sed 's/..//'
                     cd "$REAL_TARGET" || exit
                 else
-                    echo "Error: Stitched path '$STITCH_DIR' is not a valid directory."
+                    echo "Script Error: Stitched path '$STITCH_DIR' is not a valid directory."
                 fi
                 shift 2
                 ;;
