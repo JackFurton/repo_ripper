@@ -1,0 +1,11 @@
+# macOS system junk
+.DS_Store
+
+# Temporary patch leftovers if an execution ever crashes mid-flight
+*.patch
+workspace.patch
+test.patch
+
+# Local sandbox testing nodes
+scratch_test.txt
+fast/stages/4-security/genesis_verify.tf
