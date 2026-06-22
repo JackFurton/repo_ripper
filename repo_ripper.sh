@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Repo Ripper v3.5 - Ultimate LLM Local Software Tool
-# Integrated Diagnostic Trace Engine (--trace) + Complete Production Feature-Set
+# Repo Ripper v3.6 - Ultimate LLM Local Software Tool
+# Integrated Active Agentic Write Engine Layer (--apply)
 
 show_help() {
     echo "========================================================"
@@ -25,6 +25,8 @@ show_help() {
     echo "  --focus <file1 ...> Dump the FULL content of specific files or folders"
     echo "  --trace <log/text>  Parse an error log/stack trace, isolate failing files and"
     echo "                      line numbers, and dump exact code context windows (+/-10 lines)"
+    echo "  --apply             Safely parse a unified git diff patch directly off your macOS"
+    echo "                      clipboard and merge code updates cleanly into local files"
     echo ""
     echo "Power Tool Modifiers:"
     echo "  --copy              Pipe the entire generated markdown block straight to the"
@@ -33,6 +35,7 @@ show_help() {
     exit 0
 }
 
+# 1. Safety Guardrail: Check basic invocation parameters
 if [[ -z "$1" || "$1" == "-h" || "$1" == "--help" ]]; then
     show_help
 fi
@@ -48,6 +51,7 @@ shift
 
 REAL_TARGET=$(cd "$TARGET_DIR" && pwd)
 
+# Extract clip modifiers before pipeline execution
 COPY_TO_CLIPBOARD=false
 CLEANED_ARGS=()
 for arg in "$@"; do
@@ -70,13 +74,15 @@ is_sensitive_file() {
 generate_payload() {
     cd "$REAL_TARGET" || exit
 
+    # Smart Isolation Engine: Determine if directory hierarchy output should be suppressed
     local SUPPRESS_MACRO=false
     for arg in "${CLEANED_ARGS[@]}"; do
-        if [[ "$arg" == "--list" || "$arg" == "--focus" || "$arg" == "--mr" || "$arg" == "--trace" ]]; then
+        if [[ "$arg" == "--list" || "$arg" == "--focus" || "$arg" == "--mr" || "$arg" == "--trace" || "$arg" == "--apply" ]]; then
             SUPPRESS_MACRO=true
         fi
     done
 
+    # Exclusive Micro Mode Intercept: Focus
     if [[ "${CLEANED_ARGS[0]}" == "--focus" ]]; then
         echo '```markdown'
         echo "# REPO RIPPER TARGETED FOCUS PAYLOAD"
@@ -116,6 +122,7 @@ generate_payload() {
         return
     fi
 
+    # Standard Output Document Base
     echo '```markdown'
     echo "# REPO RIPPER CONTEXT COMPANION"
     echo "Primary Target: $REAL_TARGET"
@@ -231,11 +238,9 @@ generate_payload() {
                     echo "Error: --mr option requires a valid Pull/Merge Request ID number."
                     exit 1
                 fi
-                
                 local base_branch="main"
                 git rev-parse --verify master &> /dev/null && base_branch="master"
                 git fetch origin "$base_branch":"$base_branch" &>/dev/null
-                
                 git fetch origin refs/merge-requests/"$MR_ID"/head:mr-"$MR_ID"-delta &>/dev/null
                 local fetch_status=$?
                 if [[ $fetch_status -ne 0 ]]; then
@@ -246,19 +251,16 @@ generate_payload() {
                     git fetch origin refs/pull-requests/"$MR_ID"/from:mr-"$MR_ID"-delta &>/dev/null
                     fetch_status=$?
                 fi
-                
                 if [[ $fetch_status -eq 0 ]]; then
                     echo -e "\n## REMOTE PULL/MERGE REQUEST !$MR_ID CONTEXT"
                     echo "### Summary of Changes (vs $base_branch):"
                     echo '```text'
                     git diff "$base_branch...mr-${MR_ID}-delta" --stat
                     echo '```'
-                    
                     echo -e "\n### LINE-BY-LINE PATCH CHANGES (+/-):"
                     echo '```diff'
                     git diff "$base_branch...mr-${MR_ID}-delta" | head -n 300
                     echo '```'
-                    
                     echo -e "\n### Full Code Content of Modified Files (Surrounding Context):"
                     git diff "$base_branch...mr-${MR_ID}-delta" --name-only | while read -r mod_file; do
                         if [ -f "$mod_file" ]; then
@@ -267,7 +269,7 @@ generate_payload() {
                                 echo "[SECURITY GUARDRAIL]: Suppressed remote tracking payload due to signature classification breach."
                             else
                                 echo "#### File Body: $mod_file"
-                                echo "\`\`\`$syntax"
+                                echo "\`\`\`text"
                                 git show mr-"$MR_ID"-delta:"$mod_file" | head -n 150
                                 echo "\`\`\`"
                             fi
@@ -286,32 +288,22 @@ generate_payload() {
                     echo "Error: --trace option requires a log file path or a raw text string error token."
                     exit 1
                 fi
-                
                 echo -e "\n## DIAGNOSTIC ERROR TRACE ENGINE PAYLOAD"
                 local raw_error=""
-                if [ -f "$TRACE_INPUT" ]; then
-                    raw_error=$(cat "$TRACE_INPUT")
-                else
-                    raw_error="$TRACE_INPUT"
-                fi
-                
+                if [ -f "$TRACE_INPUT" ]; then raw_error=$(cat "$TRACE_INPUT"); else raw_error="$TRACE_INPUT"; fi
                 echo "### RAW LOG ANALYSIS FRAGMENT:"
                 echo '```text'
                 echo "$raw_error" | head -n 15
                 echo '```'
-                
                 echo -e "\n### ISOLATED WORKSPACE SOURCE BREAKS:"
-                # Scan trace for files ending in common code extensions, extracting line numbers if attached via colon or string markers
                 echo "$raw_error" | grep -oE '[a-zA-Z0-9_\/-]+\.(tf|tofu|py|sh|yml|yaml|json|md)(, line [0-9]+| line [0-9]+|:[0-9]+)?' | sort -u | while read -r target_hit; do
                     local file_hit
                     file_hit=$(echo "$target_hit" | grep -oE '^[a-zA-Z0-9_\/-]+\.(tf|tofu|py|sh|yml|yaml|json|md)')
                     local line_hit
                     line_hit=$(echo "$target_hit" | grep -oE '[0-9]+$')
-                    
                     if [ -f "$file_hit" ]; then
                         if is_sensitive_file "$file_hit"; then
                             echo "#### Redacted Sensitive Breaking File: $file_hit"
-                            echo "[SECURITY GUARDRAIL]: Shielded raw variable/credential sheet tracing blocks."
                         else
                             local ext="${file_hit##*.}"
                             local syntax="text"
@@ -325,7 +317,6 @@ generate_payload() {
                                 local start_w=$((line_hit - 10))
                                 if [ $start_w -lt 1 ]; then start_w=1; fi
                                 local end_w=$((line_hit + 10))
-                                # Extract code block with visible script lines for precision AI alignment
                                 sed -n "${start_w},${end_w}p" "$file_hit" | awk -v sw="$start_w" '{print (sw+NR-1) ": " $0}'
                             else
                                 head -n 40 "$file_hit" | awk '{print NR ": " $0}'
@@ -335,6 +326,34 @@ generate_payload() {
                     fi
                 done
                 shift 2
+                ;;
+            --apply)
+                echo -e "\n## ACTIVE REPO WORKSPACE WRITE EXECUTION INITIALIZED"
+                # Extract unified diff components cleanly out of the pasteboard string buffer
+                if command -v pbpaste &> /dev/null; then
+                    pbpaste | sed -n '/^diff --git/,/^\(diff --git\|```\|$\)/p' | grep -v '^```' > workspace.patch
+                    if [ ! -s workspace.patch ] || ! grep -q "^diff --git" workspace.patch; then
+                        # Try loose capture if markdown wrapping blocks were omitted by the AI
+                        pbpaste > workspace.patch
+                    fi
+                    
+                    if grep -q "^diff --git" workspace.patch; then
+                        if git apply --check workspace.patch &>/dev/null; then
+                            git apply workspace.patch
+                            echo "Success: AI code modifications applied cleanly to local workspace files!"
+                        else
+                            echo "Error: Git tracking rejected patch application dry-run. Merge conflicts detected."
+                            echo "Raw Clipboard head context tracking sample:"
+                            head -n 5 workspace.patch
+                        fi
+                    else
+                        echo "Error: No valid unified git diff patch headers found inside clipboard memory block."
+                    fi
+                    rm -f workspace.patch
+                else
+                    echo "Error: pbpaste integration utility is unavailable on this hardware configuration."
+                fi
+                shift
                 ;;
             --stitch)
                 local STITCH_DIR="$2"
@@ -362,6 +381,7 @@ generate_payload() {
     echo '```'
 }
 
+# Output Route Interceptor Execution
 if [ "$COPY_TO_CLIPBOARD" = true ]; then
     if command -v pbcopy &> /dev/null; then
         generate_payload "${CLEANED_ARGS[@]}" | pbcopy
