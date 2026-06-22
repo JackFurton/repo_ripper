@@ -49,6 +49,18 @@ for arg in "$@"; do
     fi
 done
 
+# NEW SECURITY LAYER: Evaluates files before allowing text data extraction
+is_sensitive_file() {
+    local filename
+    filename=$(basename "$1")
+    
+    # Intercept env profiles, terraform state blocks, credentials keys, and access certs
+    if [[ "$filename" =~ ^\.env || "$filename" == "config.env" || "$filename" =~ \.tfstate || "$filename" =~ \.tfvars || "$filename" =~ \.pem$ || "$filename" =~ \.key$ || "$filename" =~ key\.json$ ]]; then
+        return 0 # Match found: File is unsafe for LLM transmission
+    fi
+    return 1 # Clean asset
+}
+
 generate_payload() {
     cd "$REAL_TARGET" || exit
 
@@ -67,18 +79,23 @@ generate_payload() {
         shift
         while [[ "$#" -gt 0 ]]; do
             if [ -f "$1" ]; then
-                local ext="${1##*.}"
-                local syntax="text"
-                if [[ "$ext" == "tf" || "$ext" == "tofu" ]]; then syntax="hcl"; fi
-                if [[ "$ext" == "yml" || "$ext" == "yaml" ]]; then syntax="yaml"; fi
-                if [[ "$ext" == "sh" ]]; then syntax="bash"; fi
-                if [[ "$ext" == "py" ]]; then syntax="python"; fi
-                if [[ "$ext" == "md" ]]; then syntax="markdown"; fi
+                if is_sensitive_file "$1"; then
+                    echo -e "\n### FILE DUMP DEFENSE TRIGGERED"
+                    echo "[SECURITY BLOCKED]: Refusing to extract contents of sensitive configuration asset: $1"
+                else
+                    local ext="${1##*.}"
+                    local syntax="text"
+                    if [[ "$ext" == "tf" || "$ext" == "tofu" ]]; then syntax="hcl"; fi
+                    if [[ "$ext" == "yml" || "$ext" == "yaml" ]]; then syntax="yaml"; fi
+                    if [[ "$ext" == "sh" ]]; then syntax="bash"; fi
+                    if [[ "$ext" == "py" ]]; then syntax="python"; fi
+                    if [[ "$ext" == "md" ]]; then syntax="markdown"; fi
 
-                echo -e "\n### FILE DUMP: $1"
-                echo "\`\`\`$syntax"
-                cat "$1"
-                echo "\`\`\`"
+                    echo -e "\n### FILE DUMP: $1"
+                    echo "\`\`\`$syntax"
+                    cat "$1"
+                    echo "\`\`\`"
+                fi
             elif [ -d "$1" ]; then
                 echo -e "\n### DIRECTORY ANALYSIS: $1"
                 echo '```text'
@@ -189,10 +206,15 @@ generate_payload() {
                 echo -e "\n### Full Contents of Modified Files:"
                 git diff "$base_branch...HEAD" --name-only | while read -r mod_file; do
                     if [ -f "$mod_file" ]; then
-                        echo "#### Modified File Content: $mod_file"
-                        echo '```'
-                        cat "$mod_file" | head -n 200
-                        echo '```'
+                        if is_sensitive_file "$mod_file"; then
+                            echo "#### Unsafe File Blocked: $mod_file"
+                            echo "[SECURITY GUARDRAIL]: Redacted plaintext secret profile from context tracking mapping."
+                        else
+                            echo "#### Modified File Content: $mod_file"
+                            echo '```'
+                            cat "$mod_file" | head -n 200
+                            echo '```'
+                        fi
                     fi
                 done
                 shift
@@ -207,7 +229,6 @@ generate_payload() {
                 local base_branch="main"
                 git rev-parse --verify master &> /dev/null && base_branch="master"
                 
-                # Baseline Synchronization Update Layer
                 git fetch origin "$base_branch":"$base_branch" &>/dev/null
                 
                 git fetch origin refs/merge-requests/"$MR_ID"/head:mr-"$MR_ID"-delta &>/dev/null
@@ -236,16 +257,15 @@ generate_payload() {
                     echo -e "\n### Full Code Content of Modified Files (Surrounding Context):"
                     git diff "$base_branch...mr-${MR_ID}-delta" --name-only | while read -r mod_file; do
                         if [ -f "$mod_file" ]; then
-                            local ext="${mod_file##*.}"
-                            local syntax="text"
-                            if [[ "$ext" == "tf" || "$ext" == "tofu" ]]; then syntax="hcl"; fi
-                            if [[ "$ext" == "yml" || "$ext" == "yaml" ]]; then syntax="yaml"; fi
-                            if [[ "$ext" == "sh" ]]; then syntax="bash"; fi
-
-                            echo "#### File Body: $mod_file"
-                            echo "\`\`\`$syntax"
-                            git show mr-"$MR_ID"-delta:"$mod_file" | head -n 150
-                            echo "\`\`\`"
+                            if is_sensitive_file "$mod_file"; then
+                                echo "#### File Body Redacted: $mod_file"
+                                echo "[SECURITY GUARDRAIL]: Suppressed remote tracking payload due to signature classification breach."
+                            else
+                                echo "#### File Body: $mod_file"
+                                echo "\`\`\`$syntax"
+                                git show mr-"$MR_ID"-delta:"$mod_file" | head -n 150
+                                echo "\`\`\`"
+                            fi
                         fi
                     done
                     git branch -D mr-"$MR_ID"-delta &>/dev/null
