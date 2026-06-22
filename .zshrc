@@ -1,5 +1,5 @@
 # --------------------------------------------------------
-# REPO RIPPER COMMAND CENTER STACK (v3.10)
+# REPO RIPPER COMMAND CENTER STACK (v3.11)
 # --------------------------------------------------------
 alias rip="~/repo_ripper.sh ."
 alias riplist="~/repo_ripper.sh . --list"

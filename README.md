@@ -1,4 +1,4 @@
-# Repo Ripper (v3.10)
+# Repo Ripper (v3.11)
 
 ### Secure Local AI Context Harvester & Text-Anchor Execution Engine
 
