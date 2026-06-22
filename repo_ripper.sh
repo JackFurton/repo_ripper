@@ -356,7 +356,6 @@ for line in lines:
             print("Error: Block encountered before specifying a valid #FILE: marker path string.")
             continue
             
-        # NEW CRITICAL EDGE CASE MAPPING: If file doesn not exist and search block is blank, spawn it!
         if not os.path.exists(current_file):
             if not search_block:
                 dirname = os.path.dirname(current_file)
