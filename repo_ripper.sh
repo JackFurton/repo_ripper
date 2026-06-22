@@ -1,6 +1,12 @@
 #!/bin/bash
 
+# Repo Ripper v3.5 - Ultimate LLM Local Software Tool
+# Integrated Diagnostic Trace Engine (--trace) + Complete Production Feature-Set
+
 show_help() {
+    echo "========================================================"
+    echo "         REPO RIPPER - LLM CONTEXT COMPANION"
+    echo "========================================================"
     echo "Usage: ./repo_ripper.sh <target_directory> [options]"
     echo ""
     echo "Macro Options (Phase 1):"
@@ -17,10 +23,13 @@ show_help() {
     echo ""
     echo "Micro Options (Phase 3 Deep Dive):"
     echo "  --focus <file1 ...> Dump the FULL content of specific files or folders"
+    echo "  --trace <log/text>  Parse an error log/stack trace, isolate failing files and"
+    echo "                      line numbers, and dump exact code context windows (+/-10 lines)"
     echo ""
     echo "Power Tool Modifiers:"
     echo "  --copy              Pipe the entire generated markdown block straight to the"
     echo "                      macOS clipboard silently (skips terminal screen output)"
+    echo "========================================================"
     exit 0
 }
 
@@ -49,16 +58,13 @@ for arg in "$@"; do
     fi
 done
 
-# NEW SECURITY LAYER: Evaluates files before allowing text data extraction
 is_sensitive_file() {
     local filename
     filename=$(basename "$1")
-    
-    # Intercept env profiles, terraform state blocks, credentials keys, and access certs
     if [[ "$filename" =~ ^\.env || "$filename" == "config.env" || "$filename" =~ \.tfstate || "$filename" =~ \.tfvars || "$filename" =~ \.pem$ || "$filename" =~ \.key$ || "$filename" =~ key\.json$ ]]; then
-        return 0 # Match found: File is unsafe for LLM transmission
+        return 0
     fi
-    return 1 # Clean asset
+    return 1
 }
 
 generate_payload() {
@@ -66,7 +72,7 @@ generate_payload() {
 
     local SUPPRESS_MACRO=false
     for arg in "${CLEANED_ARGS[@]}"; do
-        if [[ "$arg" == "--list" || "$arg" == "--focus" || "$arg" == "--mr" ]]; then
+        if [[ "$arg" == "--list" || "$arg" == "--focus" || "$arg" == "--mr" || "$arg" == "--trace" ]]; then
             SUPPRESS_MACRO=true
         fi
     done
@@ -228,7 +234,6 @@ generate_payload() {
                 
                 local base_branch="main"
                 git rev-parse --verify master &> /dev/null && base_branch="master"
-                
                 git fetch origin "$base_branch":"$base_branch" &>/dev/null
                 
                 git fetch origin refs/merge-requests/"$MR_ID"/head:mr-"$MR_ID"-delta &>/dev/null
@@ -273,6 +278,62 @@ generate_payload() {
                     echo -e "\n## REMOTE PULL/MERGE REQUEST CONTEXT"
                     echo "Error: Could not locate remote references on GitLab, GitHub, or Bitbucket for ID $MR_ID."
                 fi
+                shift 2
+                ;;
+            --trace)
+                local TRACE_INPUT="$2"
+                if [[ -z "$TRACE_INPUT" || "$TRACE_INPUT" == --* ]]; then
+                    echo "Error: --trace option requires a log file path or a raw text string error token."
+                    exit 1
+                fi
+                
+                echo -e "\n## DIAGNOSTIC ERROR TRACE ENGINE PAYLOAD"
+                local raw_error=""
+                if [ -f "$TRACE_INPUT" ]; then
+                    raw_error=$(cat "$TRACE_INPUT")
+                else
+                    raw_error="$TRACE_INPUT"
+                fi
+                
+                echo "### RAW LOG ANALYSIS FRAGMENT:"
+                echo '```text'
+                echo "$raw_error" | head -n 15
+                echo '```'
+                
+                echo -e "\n### ISOLATED WORKSPACE SOURCE BREAKS:"
+                # Scan trace for files ending in common code extensions, extracting line numbers if attached via colon or string markers
+                echo "$raw_error" | grep -oE '[a-zA-Z0-9_\/-]+\.(tf|tofu|py|sh|yml|yaml|json|md)(, line [0-9]+| line [0-9]+|:[0-9]+)?' | sort -u | while read -r target_hit; do
+                    local file_hit
+                    file_hit=$(echo "$target_hit" | grep -oE '^[a-zA-Z0-9_\/-]+\.(tf|tofu|py|sh|yml|yaml|json|md)')
+                    local line_hit
+                    line_hit=$(echo "$target_hit" | grep -oE '[0-9]+$')
+                    
+                    if [ -f "$file_hit" ]; then
+                        if is_sensitive_file "$file_hit"; then
+                            echo "#### Redacted Sensitive Breaking File: $file_hit"
+                            echo "[SECURITY GUARDRAIL]: Shielded raw variable/credential sheet tracing blocks."
+                        else
+                            local ext="${file_hit##*.}"
+                            local syntax="text"
+                            if [[ "$ext" == "tf" || "$ext" == "tofu" ]]; then syntax="hcl"; fi
+                            if [[ "$ext" == "sh" ]]; then syntax="bash"; fi
+                            if [[ "$ext" == "py" ]]; then syntax="python"; fi
+
+                            echo "#### Code Context Window: $file_hit (Failing Line Target: ${line_hit:-1})"
+                            echo "\`\`\`$syntax"
+                            if [ -n "$line_hit" ]; then
+                                local start_w=$((line_hit - 10))
+                                if [ $start_w -lt 1 ]; then start_w=1; fi
+                                local end_w=$((line_hit + 10))
+                                # Extract code block with visible script lines for precision AI alignment
+                                sed -n "${start_w},${end_w}p" "$file_hit" | awk -v sw="$start_w" '{print (sw+NR-1) ": " $0}'
+                            else
+                                head -n 40 "$file_hit" | awk '{print NR ": " $0}'
+                            fi
+                            echo "\`\`\`"
+                        fi
+                    fi
+                done
                 shift 2
                 ;;
             --stitch)
