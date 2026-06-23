@@ -1,56 +1,59 @@
-# Repo Ripper (v5.0 Lean)
+# Repo Ripper Workspace Toolbelt (v5.0 Lean)
 
 ### Secure Local AI Context Harvester & Minimalist Execution Engine
 
-Repo Ripper is a zero-dependency, native Python CLI workspace companion engineered specifically for secure, air-gapped environments. It solves the critical trade-off between AI leverage and compliance by harvesting precise codebase context frames for Large Language Models and safely executing code updates locally via a line-agnostic text-anchor engine—all without installing external binaries, running heavy daemons, or streaming repository telemetry outside your network boundary.
+Repo Ripper is a zero-dependency, native hybrid workspace platform engineered specifically for secure, air-gapped corporate environments. It bridges the gap between massive AI engineering leverage and corporate compliance by harvesting precise directory layouts and file context frames locally, while safely executing code mutations via a line-agnostic text-anchor execution engine. It avoids external binary dependencies, heavy daemons, or streaming sensitive repository telemetry outside your workstation boundary.
 
 ---
 
-## Core System Architecture
+## The Terminal Command Center Matrix
 
-* **Standard Library Blueprint:** Built entirely inside a single native Python 3 framework, eliminating fragile multi-layered shell escaping and script wrapper nesting.
-* **The Secret Shield:** Automatically bypasses hidden vendor directories, local environment configs, and fat dependency caches (`.git`, `.terraform`, `.tofu`, `node_modules`, `venv`) to ensure instantaneous execution and prevent binary tracking drops.
-* **Indentation Defense:** Natively cleans web browser byte artifacts (`\xa0`) during clipboard ingestion, preserving flawless indentation tracking across whitespace-sensitive infrastructure configurations (YAML, Python, Terraform).
-* **Line-Agnostic Engine:** Updates code using contextual string match-blocks rather than line numbers (`@@`), remaining 100% resilient even if files drift or shift elsewhere during a sprint.
+Adding the minimalist profile mappings to your active environment (`~/.zshrc`) grants immediate terminal macro access to these five primitives:
+
+### 1. Local Workspace Visibility
+* `ripc` — **Context Harvester:** Recursively sweeps your local directory tree, skips hidden asset caches, compiles a blueprint directory framework, and auto-appends strict AI system response parameters directly to the macOS clipboard.
+* `ripshow <file_path>` — **Target Inspector:** Instantly wraps the entire raw text contents of a targeted file into an isolated markdown block alongside its explicit file path context and copies it to your clipboard. Use this whenever the AI requests to see inside a specific asset file.
+
+### 2. Upstream Tracking Discovery
+* `riplist` — **Remote Radar:** Natively queries open tracking endpoints on the repository origin server to print a clean list of live active Merge/Pull Request tracking ID numbers without needing tokens or browser interaction.
+* `ripcheck <id>` — **Live Delta Streamer:** Anonymously streams the text delta of a remote PR directly into your terminal scrollback canvas with zero pagination page freezes (`| cat` bypass). It simultaneously loads the full line-by-line patch differential onto your clipboard so the AI can evaluate cross-branch collisions.
+
+### 3. Agentic Write Execution
+* `ripapply` — **Surgical Execution Engine:** Intercepts structured text-patches sitting on your clipboard, cleanses browser whitespace corruption artifacts, auto-creates deep sub-folders if spawning an asset from scratch, and performs line-agnostic string-matching writes straight to local disk.
 
 ---
 
-## Terminal Command Center Stack
+## Editor Native Integrations (Vim)
 
-Adding the lightweight profile mappings to your local environment grants immediate macro access to these core primitives:
+Your `.vimrc` environment maps your local shell primitives directly to your editor workspace window profile. 
 
-### 1. Read-Only Context Harvesting
-* `ripc`: Captures your localized workspace directory structure and **automatically appends strict system prompt parameters** straight to your macOS clipboard. Use this before jumping into an AI chat window.
-* `riplist`: Queries remote branches to instantly view open MR/PR tracker IDs on the contract tracking server without requiring API tokens or checking out remote branches locally.
-
-### 2. Agentic Write Modifications
-* `ripapply`: Intercepts structured text-patches sitting on your clipboard, verifies structural integrity, auto-creates folders if building an architectural block from scratch, and cleanly drops modifications onto local disk files.
+* `,c` — **Active Buffer Ingestion:** Pressing your leader key sequence inside any active editor layout wraps the open code document in clean markdown and automatically injects it into your macOS system clipboard buffer for immediate AI evaluation.
 
 ---
 
 ## The Operational Workflow Loop
 
 ```text
-       [ Terminal ] --------( 1. ripc )-------> [ Mac Clipboard ]
-            ^                                          │
-            │                                     ( 2. Cmd+V )
-            │                                          ▼
-     ( 4. ripapply )                             [ AI Workspace ]
-            │                                          │
-            │                                    ( 3. Copy Fix )
-            └─────────── [ Mac Clipboard ] <───────────┘
+                     ┌───────( 1. ripc / ripshow )──────┐
+                     ▼                                  │
+       [ Local Terminal ] <───────( 4. ripapply )─── [ Mac Clipboard ]
+             │   ▲                                      ▲
+   ( riplist │   │ ( ripcheck )                         │
+   riplist ) ▼   │                                 ( 3. Copy Fix )
+       [ Upstream Repo ]                                │
+             └───────────────( 2. Cmd+V )───────────> [ AI Chat Pane ]
 ```
 
-1. **Harvest:** Open your branch terminal and run `ripc`. Your context footprint and prompt constraints are now loaded on your clipboard.
-2. **Consult:** Paste (**Cmd+V**) the payload directly to the AI window and describe your ticket objective.
-3. **Capture:** The AI writes out a modification wrapped inside the exact text-anchor block format. Click **Copy** on that response window.
-4. **Execute:** Return to your local terminal and run `ripapply`. The script instantly synchronizes the file layouts on disk.
+1. **Harvest:** Execute `ripc` to copy your directory tree mapping, or run `ripshow <file_path>` (or `,c` in Vim) to capture a specific file body.
+2. **Consult:** Paste (**Cmd+V**) the payload directly to the AI window along with any active logs, or pass a teammate's PR patch data via `ripcheck <id>`.
+3. **Capture:** The AI interprets the environment and responds with an explicit code patch wrapped inside text-anchor blocks. Click **Copy** on that response block.
+4. **Execute:** Return to your active terminal line, execute `ripapply`, and watch the code update on disk instantly.
 
 ---
 
-## The AI Structural Patch Template
+## Mandatory AI System Response Constraints
 
-Because your `ripc` execution teaches the model how your workspace operates, the AI will always respond utilizing this exact, merge-conflict-inspired text schema:
+When processing user requests, the AI assistant **must** bypass unified git line coordinates (`@@`) and structure all file creations, deletions, edits, or bug fixes utilizing this exact text-anchor SEARCH/REPLACE paradigm template:
 
 ```text
 #FILE: path/to/your/target_file.tf
@@ -66,5 +69,24 @@ Because your `ripc` execution teaches the model how your workspace operates, the
 >>>>>>> REPLACE
 ```
 
-> ### 💡 The Scratch File Pattern
-> When creating brand-new files from scratch, the AI will state the target path in the `#FILE:` tag, leave the `<<<<<<< SEARCH` section entirely blank, and output the total new architecture layout inside the `REPLACE` section. Running `ripapply` detects this pattern, automatically constructs the missing directory tree paths, and spawns the fresh file asset onto your computer cleanly.
+> ### The Brand-New File Template Pattern
+> When creating fresh files from scratch, state the full deployment path inside the `#FILE:` string tag, leave the `<<<<<<< SEARCH` section entirely empty, and dump the entire new configuration code block cleanly between the `=======` and `>>>>>>> REPLACE` markers. Running `ripapply` detects this profile structure, automatically constructs the missing directory hierarchy paths on your computer, and generates the file asset instantly.
+
+---
+
+> ### Usage:
+
+```python
+usage: repo_ripper.py [-h] [--copy] [--list] [--apply] target_dir
+
+Repo Ripper v5.0 Lean
+
+positional arguments:
+  target_dir
+
+optional arguments:
+  -h, --help  show this help message and exit
+  --copy
+  --list
+  --apply
+```
