@@ -75,12 +75,10 @@ ripsnap() {
 }
 
 ripscreen() {
-    echo "Capturing active terminal history scrollback canvas..."
     # Captures text, then trims all trailing and leading ghost whitespace blocks completely
     osascript -e 'tell application "Terminal" to get contents of selected tab of front window' \
         | awk '/[^[:space:]]/{if(p) for(i=1;i<=b;i++) print ""; print; p=1; b=0; next} {if(p) b++}' \
         | pbcopy
-    echo "Success: Trimmed terminal printout trail loaded to clipboard."
 }
 
 # Git Navigation Essentials
