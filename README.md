@@ -8,7 +8,7 @@ Repo Ripper is a zero-dependency, native hybrid workspace platform engineered sp
 
 ## The Terminal Command Center Matrix
 
-Adding the minimalist profile mappings to your active environment (`~/.zshrc`) grants immediate terminal macro access to these seven primitives:
+Adding the minimalist profile mappings to your active environment (`~/.zshrc`) grants immediate terminal macro access to these six primitives:
 
 ### 1. Local Workspace Visibility & Ingestion
 * `ripc` — **Context Harvester:** Recursively sweeps your local directory tree, skips hidden asset caches, compiles a blueprint directory framework, and auto-appends strict AI system response parameters directly to the macOS clipboard.
@@ -35,8 +35,8 @@ Your `.vimrc` environment maps your local shell primitives directly to your edit
 ## The Operational Workflow Loop
 
 ```text
-                     ┌───( 1. ripc / ripshow / ripsnap / )───┐
-                     ▼                                                 │
+                     ┌───( 1. ripc / ripshow / ripsnap )───┐
+                     ▼                                                │
        [ Local Terminal ] <───────( 4. ripapply )─────────── [ Mac Clipboard ]
              │   ▲                                                     ▲
    ( riplist │   │ ( ripcheck )                                        │
