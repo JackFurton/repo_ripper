@@ -17,7 +17,6 @@ ripcheck() {
     fi
 
     echo "Fetching remote tracking layout for ID $1..."
-    # Pull the remote PR tip silently into FETCH_HEAD
     git fetch origin refs/merge-requests/"$1"/head 2>/dev/null || git fetch origin refs/pull/"$1"/head 2>/dev/null
 
     # 1. Silently load the actual line-by-line diff straight to the AI clipboard
@@ -40,7 +39,6 @@ ripshow() {
         return 1
     fi
 
-    # Wrap the file content cleanly in markdown and pipe it straight to the clipboard
     (echo -e "# FILE CONTEXT SOURCE: $1\n\`\`\`text"; cat "$1"; echo -e "\`\`\`") | pbcopy
     echo "Success: Encapsulated contents of $1 loaded to clipboard."
 }
@@ -56,36 +54,29 @@ ripsnap() {
         return 1
     fi
 
-    echo "Snapping all local text assets inside directory frame: $1..."
+    echo "Snapping clean source assets inside directory frame: $1..."
     {
         echo -e "# BULK WORKSPACE SNAPSHOT TARGET: $1\n"
         
-        # Loop through all files, filtering out vendor/cache garbage
-        find "$1" -type f \
+        # Target explicitly safe development text extensions
+        find "$1" -type f \( -name "*.tf" -o -name "*.tfvars" -o -name "*.sh" -o -name "*.py" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.txt" -o -name "*.env" \) \
             ! -path '*/.*' \
             ! -path '*node_modules*' \
             ! -path '*venv*' \
             ! -path '*.terraform*' \
             ! -path '*.tofu*' | while read -r file; do
-                
-                # Double-check that it is a parseable text or source file
-                if file "$file" | grep -qE 'text|empty|JSON|XML|YAML'; then
-                    echo -e "#FILE: $file"
-                    echo "\`\`\`text"
-                    cat "$file"
-                    echo -e "\`\`\`\n"
-                fi
+                echo -e "#FILE: $file"
+                echo "\`\`\`text"
+                cat "$file"
+                echo -e "\`\`\`\n"
         done
     } | pbcopy
-    echo "Success: Enclosed directory payload loaded to clipboard for the AI."
+    echo "Success: Safe workspace directory snapshot loaded to clipboard."
 }
 
 ripscreen() {
     echo "Capturing active terminal history scrollback canvas..."
-    
-    # Leverages macOS native terminal automation descriptors
     osascript -e 'tell application "Terminal" to get contents of selected tab of front window' | pbcopy
-    
     echo "Success: Full terminal printout trail loaded to clipboard."
 }
 
