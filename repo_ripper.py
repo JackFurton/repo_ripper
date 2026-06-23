@@ -54,12 +54,25 @@ class RepoRipper:
         ]
         return any(re.search(pat, filename) for pat in sensitive_patterns)
 
-    def run_cmd(self, args, cwd=None):
-        """Safely executes underlying terminal sub-processes."""
+    def run_cmd(self, args, cwd=None, timeout=15):
+        """Safely executes sub-processes with strict execution timeout guardrails."""
         try:
-            process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd or self.target_dir)
-            stdout, _ = process.communicate()
+            # For network operations, allow stderr to flow to the console so passphrases/prompts work
+            is_fetch = "fetch" in args
+            stderr_pipe = None if is_fetch else subprocess.PIPE
+            
+            process = subprocess.Popen(
+                args, 
+                stdout=subprocess.PIPE, 
+                stderr=stderr_pipe, 
+                cwd=cwd or self.target_dir
+            )
+            stdout, _ = process.communicate(timeout=timeout)
             return stdout.decode('utf-8', errors='ignore').strip()
+        except subprocess.TimeoutExpired:
+            process.kill()
+            print(f"\n[NETWORK TIMEOUT]: Command '{' '.join(args)}' exceeded its {timeout}s window.")
+            return "TIMEOUT"
         except Exception:
             return ""
 
@@ -155,7 +168,7 @@ class RepoRipper:
         self.log("Querying remote tracking endpoints without API tokens...")
         self.log('```text')
         remote_refs = self.run_cmd(['git', 'ls-remote', 'origin', 'refs/merge-requests/*/head', 'refs/pull/*/head', 'refs/pull-requests/*/from'])
-        if not remote_refs:
+        if not remote_refs or remote_refs == "TIMEOUT":
             self.log("No remote open request tracking references detected or remote origin unreachable.")
         else:
             for line in remote_refs.splitlines():
@@ -239,12 +252,22 @@ class RepoRipper:
 
     def execute_mr(self, mr_id):
         base_branch = "master" if "master" in self.run_cmd(['git', 'branch', '-a']) else "main"
-        self.run_cmd(['git', 'fetch', 'origin', f'{base_branch}:{base_branch}'])
         
+        print(f"Syncing tracking baseline with origin/{base_branch}...")
+        if self.run_cmd(['git', 'fetch', 'origin', f'{base_branch}:{base_branch}']) == "TIMEOUT":
+            self.log("Aborted: Remote repository baseline sync timed out.")
+            return
+
+        print(f"Streaming remote request delta for ID {mr_id}...")
         fetched = False
         for ref_spec in [f'refs/merge-requests/{mr_id}/head:mr-{mr_id}-delta', f'refs/pull/{mr_id}/head:mr-{mr_id}-delta', f'refs/pull-requests/{mr_id}/from:mr-{mr_id}-delta']:
-            proc = subprocess.run(['git', 'fetch', 'origin', ref_spec], capture_output=True)
-            if proc.returncode == 0:
+            res = self.run_cmd(['git', 'fetch', 'origin', ref_spec])
+            if res == "TIMEOUT":
+                self.log("Aborted: Fetch connection broke due to a network timeout.")
+                return
+            
+            # Check if temporary delta branch successfully materialized locally
+            if self.run_cmd(['git', 'branch', '--list', f'mr-{mr_id}-delta']):
                 fetched = True
                 break
                 
@@ -388,7 +411,7 @@ class RepoRipper:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Repo Ripper v4.0 - Enterprise Code Agent Companion")
+    parser = argparse.ArgumentParser(description="Repo Ripper v4.2 - Enterprise Code Agent Companion")
     parser.add_argument('target_dir', help="Path to target directory workspace.")
     parser.add_argument('--copy', action='store_true', help="Pipe output streams straight to clipboard storage silently.")
     parser.add_argument('--focus', nargs='+', help="Extract full raw text parameters of target files or sub-folders.")
