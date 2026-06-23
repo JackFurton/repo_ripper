@@ -45,6 +45,41 @@ ripshow() {
     echo "Success: Encapsulated contents of $1 loaded to clipboard."
 }
 
+ripsnap() {
+    if [ -z "$1" ]; then
+        echo "Error: Please specify a target directory. (e.g., ripsnap modules/kms)"
+        return 1
+    fi
+
+    if [ ! -d "$1" ]; then
+        echo "Error: Directory not found on disk: $1"
+        return 1
+    fi
+
+    echo "Snapping all local text assets inside directory frame: $1..."
+    {
+        echo -e "# BULK WORKSPACE SNAPSHOT TARGET: $1\n"
+        
+        # Loop through all files, filtering out vendor/cache garbage
+        find "$1" -type f \
+            ! -path '*/.*' \
+            ! -path '*node_modules*' \
+            ! -path '*venv*' \
+            ! -path '*.terraform*' \
+            ! -path '*.tofu*' | while read -r file; do
+                
+                # Double-check that it is a parseable text or source file
+                if file "$file" | grep -qE 'text|empty|JSON|XML|YAML'; then
+                    echo -e "#FILE: $file"
+                    echo "\`\`\`text"
+                    cat "$file"
+                    echo -e "\`\`\`\n"
+                fi
+        done
+    } | pbcopy
+    echo "Success: Enclosed directory payload loaded to clipboard for the AI."
+}
+
 # Git Navigation Essentials
 alias gd='git diff'
 alias gs='git status'
