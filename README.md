@@ -74,7 +74,7 @@ When processing user requests, the AI assistant **must** bypass unified git line
 
 ---
 
-> ### Usage:
+### Usage:
 
 ```python
 usage: repo_ripper.py [-h] [--copy] [--list] [--apply] target_dir
