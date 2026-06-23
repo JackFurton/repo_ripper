@@ -8,11 +8,13 @@ Repo Ripper is a zero-dependency, native hybrid workspace platform engineered sp
 
 ## The Terminal Command Center Matrix
 
-Adding the minimalist profile mappings to your active environment (`~/.zshrc`) grants immediate terminal macro access to these five primitives:
+Adding the minimalist profile mappings to your active environment (`~/.zshrc`) grants immediate terminal macro access to these seven primitives:
 
-### 1. Local Workspace Visibility
+### 1. Local Workspace Visibility & Ingestion
 * `ripc` — **Context Harvester:** Recursively sweeps your local directory tree, skips hidden asset caches, compiles a blueprint directory framework, and auto-appends strict AI system response parameters directly to the macOS clipboard.
-* `ripshow <file_path>` — **Target Inspector:** Instantly wraps the entire raw text contents of a targeted file into an isolated markdown block alongside its explicit file path context and copies it to your clipboard. Use this whenever the AI requests to see inside a specific asset file.
+* `ripshow <file_path>` — **Target Inspector:** Instantly wraps the entire raw text contents of a targeted file into an isolated markdown block alongside its explicit file path context and copies it to your clipboard. 
+* `ripsnap <dir_path>` — **Bulk Folder Snapper:** Recursively targets safe text/code assets inside an entire targeted directory frame, completely bypassing binary risk blocks, and structures them into a single unified workspace payload for multi-file ingestion.
+* `ripscreen` — **Scrollback Canvas Grabber:** Automates macOS terminal history collection to instantly capture active console prints, execution trails, or deployment error dumps onto your clipboard without manual mouse selections.
 
 ### 2. Upstream Tracking Discovery
 * `riplist` — **Remote Radar:** Natively queries open tracking endpoints on the repository origin server to print a clean list of live active Merge/Pull Request tracking ID numbers without needing tokens or browser interaction.
@@ -34,17 +36,17 @@ Your `.vimrc` environment maps your local shell primitives directly to your edit
 ## The Operational Workflow Loop
 
 ```text
-                     ┌───────( 1. ripc / ripshow )──────┐
-                     ▼                                  │
-       [ Local Terminal ] <───────( 4. ripapply )─── [ Mac Clipboard ]
-             │   ▲                                      ▲
-   ( riplist │   │ ( ripcheck )                         │
-   riplist ) ▼   │                                 ( 3. Copy Fix )
-       [ Upstream Repo ]                                │
-             └───────────────( 2. Cmd+V )───────────> [ AI Chat Pane ]
+                     ┌───( 1. ripc / ripshow / ripsnap / ripscreen )───┐
+                     ▼                                                 │
+       [ Local Terminal ] <───────( 4. ripapply )─────────── [ Mac Clipboard ]
+             │   ▲                                                     ▲
+   ( riplist │   │ ( ripcheck )                                        │
+   riplist ) ▼   │                                                ( 3. Copy Fix )
+       [ Upstream Repo ]                                               │
+             └───────────────( 2. Cmd+V )──────────────────────────> [ AI Chat Pane ]
 ```
 
-1. **Harvest:** Execute `ripc` to copy your directory tree mapping, or run `ripshow <file_path>` (or `,c` in Vim) to capture a specific file body.
+1. **Harvest:** Execute `ripc` to copy your directory tree mapping, run `ripshow` / `ripsnap` to capture codebase bodies, or run `ripscreen` to capture execution errors.
 2. **Consult:** Paste (**Cmd+V**) the payload directly to the AI window along with any active logs, or pass a teammate's PR patch data via `ripcheck <id>`.
 3. **Capture:** The AI interprets the environment and responds with an explicit code patch wrapped inside text-anchor blocks. Click **Copy** on that response block.
 4. **Execute:** Return to your active terminal line, execute `ripapply`, and watch the code update on disk instantly.
