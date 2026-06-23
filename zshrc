@@ -80,36 +80,43 @@ ripfind() {
         return 1
     fi
 
-    # Auto-resolve the parent workspace layer sitting right above your repos
     local parent_workspace=$(dirname "$(pwd)")
     
-    echo "Scanning all sister repositories for cross-boundary matches: $1..."
+    echo "Scanning sibling repositories for cross-boundary matches: $1..."
     {
         echo -e "# GLOBAL CROSS-REPOSITORY CODE COGNITION INDEX\n"
         echo -e "Search Query Target: \`$1\`\n"
         
-        # High-speed recursive scan limited to text/code structures
-        find "$parent_workspace" -maxdepth 4 -type f \( -name "*.tf" -o -name "*.tfvars" -o -name "*.sh" -o -name "*.py" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.txt" -o -name "*.env" \) \
-            ! -path '*/.*' \
-            ! -path '*node_modules*' \
-            ! -path '*venv*' \
-            ! -path '*.terraform*' \
-            ! -path '*.tofu*' | while read -r file; do
-                
-                # Check if the file contains the search target string
-                if grep -q "$1" "$file"; then
-                    # Compute a clean relative namespace tag (e.g., @sclz/modules/pubsub/iam.tf)
-                    local relative_spec=${file#$parent_workspace/}
+        # Iterate over item frameworks inside the parent folder layer
+        for repo in "$parent_workspace"/*/; do
+            [ -d "$repo" ] || continue
+            local folder_name=$(basename "$repo")
+            
+            # Strict boundary protection against default macOS directory paths
+            if [[ "$folder_name" =~ ^(Applications|Desktop|Documents|Downloads|Library|Public|Movies|Music|Pictures|Trash)$ ]]; then
+                continue
+            fi
+            
+            # Execute targeted deep-scans exclusively inside real codebase folders
+            find "$repo" -maxdepth 4 -type f \( -name "*.tf" -o -name "*.tfvars" -o -name "*.sh" -o -name "*.py" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.txt" -o -name "*.env" \) \
+                ! -path '*/.*' \
+                ! -path '*node_modules*' \
+                ! -path '*venv*' \
+                ! -path '*.terraform*' \
+                ! -path '*.tofu*' 2>/dev/null | while read -r file; do
                     
-                    echo "#FILE: @$relative_spec"
-                    echo "\`\`\`text"
-                    # Print matching line along with 2 lines of surrounding structural context and line numbers
-                    grep -n -C 2 "$1" "$file"
-                    echo -e "\`\`\`\n"
-                fi
+                    if grep -q "$1" "$file"; then
+                        local relative_spec=${file#$parent_workspace/}
+                        
+                        echo "#FILE: @$relative_spec"
+                        echo "\`\`\`text"
+                        grep -n -C 2 "$1" "$file"
+                        echo -e "\`\`\`\n"
+                    fi
+            done
         done
     } | pbcopy
-    echo "Success: Global cross-repo context matches loaded to clipboard."
+    echo "Success: Shielded sibling-repo context matches loaded to clipboard."
 }
 
 # Git Navigation Essentials
