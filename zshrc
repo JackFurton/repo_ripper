@@ -74,22 +74,6 @@ ripsnap() {
     echo "Success: Safe workspace directory snapshot loaded to clipboard."
 }
 
-ripscreen() {
-    local engine_cmd=""
-    
-    # Auto-detect the host terminal emulator environment
-    if [ "$TERM_PROGRAM" = "iTerm.app" ]; then
-        engine_cmd="tell application \"iTerm\" to tell current session of current window to get text"
-    else
-        engine_cmd="tell application \"Terminal\" to get contents of selected tab of front window"
-    fi
-
-    # Extract canvas contents and cleanly strip leading/trailing ghost padding
-    osascript -e "$engine_cmd" 2>/dev/null \
-        | awk '/[^[:space:]]/{if(p) for(i=1;i<=b;i++) print ""; print; p=1; b=0; next} {if(p) b++}' \
-        | pbcopy
-}
-
 # Git Navigation Essentials
 alias gd='git diff'
 alias gs='git status'

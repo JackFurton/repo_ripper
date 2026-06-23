@@ -14,7 +14,6 @@ Adding the minimalist profile mappings to your active environment (`~/.zshrc`) g
 * `ripc` — **Context Harvester:** Recursively sweeps your local directory tree, skips hidden asset caches, compiles a blueprint directory framework, and auto-appends strict AI system response parameters directly to the macOS clipboard.
 * `ripshow <file_path>` — **Target Inspector:** Instantly wraps the entire raw text contents of a targeted file into an isolated markdown block alongside its explicit file path context and copies it to your clipboard. 
 * `ripsnap <dir_path>` — **Bulk Folder Snapper:** Recursively targets safe text/code assets inside an entire targeted directory frame, completely bypassing binary risk blocks, and structures them into a single unified workspace payload for multi-file ingestion.
-* `ripscreen` — **Scrollback Canvas Grabber:** Automates macOS terminal history collection to instantly capture active console prints, execution trails, or deployment error dumps onto your clipboard without manual mouse selections.
 
 ### 2. Upstream Tracking Discovery
 * `riplist` — **Remote Radar:** Natively queries open tracking endpoints on the repository origin server to print a clean list of live active Merge/Pull Request tracking ID numbers without needing tokens or browser interaction.
@@ -36,7 +35,7 @@ Your `.vimrc` environment maps your local shell primitives directly to your edit
 ## The Operational Workflow Loop
 
 ```text
-                     ┌───( 1. ripc / ripshow / ripsnap / ripscreen )───┐
+                     ┌───( 1. ripc / ripshow / ripsnap / )───┐
                      ▼                                                 │
        [ Local Terminal ] <───────( 4. ripapply )─────────── [ Mac Clipboard ]
              │   ▲                                                     ▲
@@ -46,7 +45,7 @@ Your `.vimrc` environment maps your local shell primitives directly to your edit
              └───────────────( 2. Cmd+V )──────────────────────────> [ AI Chat Pane ]
 ```
 
-1. **Harvest:** Execute `ripc` to copy your directory tree mapping, run `ripshow` / `ripsnap` to capture codebase bodies, or run `ripscreen` to capture execution errors.
+1. **Harvest:** Execute `ripc` to copy your directory tree mapping, run `ripshow` / `ripsnap` to capture codebase bodies, or `Cmd + A` to capture your terminal window.
 2. **Consult:** Paste (**Cmd+V**) the payload directly to the AI window along with any active logs, or pass a teammate's PR patch data via `ripcheck <id>`.
 3. **Capture:** The AI interprets the environment and responds with an explicit code patch wrapped inside text-anchor blocks. Click **Copy** on that response block.
 4. **Execute:** Return to your active terminal line, execute `ripapply`, and watch the code update on disk instantly.
