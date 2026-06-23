@@ -21,12 +21,12 @@ ripcheck() {
     git fetch origin refs/merge-requests/"$1"/head 2>/dev/null || git fetch origin refs/pull/"$1"/head 2>/dev/null
 
     # 1. Silently load the actual line-by-line diff straight to the AI clipboard
-    git --no-pager diff main...FETCH_HEAD | pbcopy
+    git diff main...FETCH_HEAD | pbcopy
     echo "Success: Full line-by-line code changes loaded to clipboard."
 
-    # 2. Dump the exact line diff straight to the terminal screen history (no less pager!)
+    # 2. Force a raw terminal text dump by piping straight through cat
     echo -e "\n--- LINE-BY-LINE PATCH CHANGES FOR PR !$1 ---"
-    git --no-pager diff main...FETCH_HEAD
+    git diff main...FETCH_HEAD | cat
 }
 
 # Git Navigation Essentials
