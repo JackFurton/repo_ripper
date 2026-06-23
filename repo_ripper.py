@@ -31,7 +31,6 @@ class RepoRipper:
             entries = sorted(os.scandir(path), key=lambda e: e.name)
         except Exception: return
 
-        # Drop out hidden files and fat dependency folders instantly
         entries = [e for e in entries if not e.name.startswith('.') and e.name not in ['node_modules', 'venv', 'target', '__pycache__', '.git', '.terraform', '.tofu']]
         
         for i, entry in enumerate(entries):
@@ -110,14 +109,19 @@ class RepoRipper:
                         with open(full_path, 'w', encoding='utf-8') as f: f.write(f_content.replace(s_str, r_str))
                         print(f"Success: Patched file: {current_file}")
                         applied_count += 1
+            else:
+                if state == "SEARCH":
+                    search_block.append(line)
+                elif state == "REPLACE":
+                    replace_block.append(line)
         print(f"\nExecution Complete: Synchronized {applied_count} workspace mutations.")
 
 def main():
-    parser = argparse.ArgumentParser(description="Repo Ripper v5.0 Lean")
-    parser.add_argument('target_dir')
-    parser.add_argument('--copy', action='store_true')
-    parser.add_argument('--list', action='store_true')
-    parser.add_argument('--apply', action='store_true')
+    parser = argparse.ArgumentParser(description="Repo Ripper v5.0 Lean - Secure AI Workspace Companion")
+    parser.add_argument('target_dir', help="Path to target directory workspace.")
+    parser.add_argument('--copy', action='store_true', help="Harvest codebase tree map and inject strict system prompt constraints to clipboard.")
+    parser.add_argument('--list', action='store_true', help="Query upstream server to discover live active MR/PR tracking ID numbers.")
+    parser.add_argument('--apply', action='store_true', help="Surgically apply text-anchor SEARCH/REPLACE patches onto local disk files.")
     args = parser.parse_args()
 
     ripper = RepoRipper(args.target_dir, copy_to_clipboard=args.copy)
