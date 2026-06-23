@@ -29,6 +29,22 @@ ripcheck() {
     git diff main...FETCH_HEAD | cat
 }
 
+ripshow() {
+    if [ -z "$1" ]; then
+        echo "Error: Please specify a file path. (e.g., ripshow modules/gcs/main.tf)"
+        return 1
+    fi
+
+    if [ ! -f "$1" ]; then
+        echo "Error: File not found on disk: $1"
+        return 1
+    fi
+
+    # Wrap the file content cleanly in markdown and pipe it straight to the clipboard
+    (echo -e "# FILE CONTEXT SOURCE: $1\n\`\`\`text"; cat "$1"; echo -e "\`\`\`") | pbcopy
+    echo "Success: Encapsulated contents of $1 loaded to clipboard."
+}
+
 # Git Navigation Essentials
 alias gd='git diff'
 alias gs='git status'
