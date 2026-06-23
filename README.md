@@ -75,18 +75,17 @@ When processing user requests, the AI assistant **must** bypass unified git line
 ---
 
 ### Usage:
-
 ```python
 usage: repo_ripper.py [-h] [--copy] [--list] [--apply] target_dir
 
-Repo Ripper v5.0 Lean
+Repo Ripper v5.0 Lean - Secure AI Workspace Companion
 
 positional arguments:
-  target_dir
+  target_dir  Path to target directory workspace.
 
 optional arguments:
   -h, --help  show this help message and exit
-  --copy
-  --list
-  --apply
+  --copy      Harvest codebase tree map and inject strict system prompt constraints to clipboard.
+  --list      Query upstream server to discover live active MR/PR tracking ID numbers.
+  --apply     Surgically apply text-anchor SEARCH/REPLACE patches onto local disk files.
 ```
