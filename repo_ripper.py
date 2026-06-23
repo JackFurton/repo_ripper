@@ -3,7 +3,6 @@ import os
 import sys
 import argparse
 import subprocess
-import re
 
 class RepoRipper:
     def __init__(self, target_dir, copy_to_clipboard=False):
@@ -12,81 +11,28 @@ class RepoRipper:
         self.payload_buffer = []
 
     def log(self, text):
-        """Accumulates clean markdown logs into our payload buffer."""
         self.payload_buffer.append(text)
 
     def print_payload(self):
-        """Outputs full markdown stream or pipes it silently into macOS clipboard."""
         final_markdown = "\n".join(self.payload_buffer)
         if self.copy_to_clipboard:
-            self.write_clipboard(final_markdown)
-            print("Success: Entire markdown context payload injected directly into the macOS clipboard.")
+            try:
+                process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE)
+                process.communicate(input=final_markdown.encode('utf-8'))
+                print("Success: Context loaded to macOS clipboard.")
+            except Exception:
+                print("Error: Clipboard integration failed.")
         else:
             print(final_markdown)
 
-    @staticmethod
-    def read_clipboard():
-        """Reads data straight off the macOS pasteboard buffer."""
-        try:
-            process = subprocess.Popen(['pbpaste'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            stdout, _ = process.communicate()
-            return stdout.decode('utf-8', errors='ignore')
-        except Exception:
-            print("Error: pbpaste system architecture hooks are unavailable.")
-            sys.exit(1)
-
-    @staticmethod
-    def write_clipboard(text):
-        """Pipes data straight into the macOS pasteboard buffer."""
-        try:
-            process = subprocess.Popen(['pbcopy'], stdin=subprocess.PIPE, stderr=subprocess.PIPE)
-            process.communicate(input=text.encode('utf-8'))
-        except Exception:
-            print("Error: pbcopy system architecture hooks are unavailable.")
-            sys.exit(1)
-
-    def is_sensitive_file(self, filepath):
-        """The Secret Shield: Blocks plaintext security infrastructure assets."""
-        filename = os.path.basename(filepath)
-        sensitive_patterns = [
-            r'^\.env', r'^config\.env', r'\.tfstate', 
-            r'\.tfvars', r'\.pem$', r'\.key$', r'key\.json$'
-        ]
-        return any(re.search(pat, filename) for pat in sensitive_patterns)
-
-    def run_cmd(self, args, cwd=None, timeout=15):
-        """Safely executes sub-processes with strict execution timeout guardrails."""
-        try:
-            # For network operations, allow stderr to flow to the console so passphrases/prompts work
-            is_fetch = "fetch" in args
-            stderr_pipe = None if is_fetch else subprocess.PIPE
-            
-            process = subprocess.Popen(
-                args, 
-                stdout=subprocess.PIPE, 
-                stderr=stderr_pipe, 
-                cwd=cwd or self.target_dir
-            )
-            stdout, _ = process.communicate(timeout=timeout)
-            return stdout.decode('utf-8', errors='ignore').strip()
-        except subprocess.TimeoutExpired:
-            process.kill()
-            print(f"\n[NETWORK TIMEOUT]: Command '{' '.join(args)}' exceeded its {timeout}s window.")
-            return "TIMEOUT"
-        except Exception:
-            return ""
-
     def generate_native_tree(self, path, current_depth=1, max_depth=3, prefix=""):
-        """Pure Python Recursive Tree Engine: Zero external binary dependencies."""
-        if current_depth > max_depth:
-            return
+        if current_depth > max_depth: return
         try:
             entries = sorted(os.scandir(path), key=lambda e: e.name)
-        except Exception:
-            return
+        except Exception: return
 
-        # Filter out hidden nodes and heavy platform dependencies
-        entries = [e for e in entries if not e.name.startswith('.') and e.name not in ['node_modules', 'venv', 'target', '__pycache__', '.git']]
+        # Drop out hidden files and fat dependency folders instantly
+        entries = [e for e in entries if not e.name.startswith('.') and e.name not in ['node_modules', 'venv', 'target', '__pycache__', '.git', '.terraform', '.tofu']]
         
         for i, entry in enumerate(entries):
             is_last = (i == len(entries) - 1)
@@ -96,356 +42,95 @@ class RepoRipper:
                 next_prefix = prefix + ("    " if is_last else "│   ")
                 self.generate_native_tree(entry.path, current_depth + 1, max_depth, next_prefix)
 
-    def append_header(self, suppress_macro=False):
-        """Constructs the standard AI baseline companion layout wrapper."""
-        current_branch = self.run_cmd(['git', 'rev-parse', '--abbrev-ref', 'HEAD']) or 'Not a git repo'
+    def append_header(self, suppress_tree=False):
+        current_branch = "main"
+        try:
+            current_branch = subprocess.check_output(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], cwd=self.target_dir).decode('utf-8').strip()
+        except Exception: pass
         
         self.log("# REPO RIPPER CONTEXT COMPANION")
-        self.log(f"**Primary Target:** `{self.target_dir}`")
-        self.log(f"**Current Branch:** `{current_branch}`\n")
-        self.log("### CRITICAL INSTRUCTIONS FOR THE AI ASSISTANT:")
-        self.log("This context map was generated by the user using a local CLI utility tool called Repo Ripper.")
-        self.log("Do not ask the user to manually open or copy-paste code files piece-by-piece.")
-        self.log("If you need to inspect the full contents of any configuration, folder, or file listed in the")
-        self.log("directory structure below to answer their questions, explicitly instruct the user to run:")
-        self.log("  `ripapply` or use targeted tracking variables.")
-        self.log("\n---")
-
-        if not suppress_macro:
-            self.log("\n## DIRECTORY STRUCTURE")
-            self.log("```text")
+        self.log(f"**Primary Target:** `{self.target_dir}` | **Branch:** `{current_branch}`\n")
+        
+        if not suppress_tree:
+            self.log("## DIRECTORY STRUCTURE\n```text")
             self.log(os.path.basename(self.target_dir))
             self.generate_native_tree(self.target_dir)
             self.log("```")
 
-            self.log("\n## TOP-LEVEL CONFIGURATION FILES")
-            config_files = ["project-config.yml", "tenants.yml", "project-config.yaml", "tenants.yaml", "default-versions.tf", "package.json", "go.mod"]
-            for file in config_files:
-                fpath = os.path.join(self.target_dir, file)
-                if os.path.isfile(fpath):
-                    self.log(f"### File: {file}")
-                    self.log('```yaml')
-                    with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
-                        lines = [f.readline() for _ in range(50)]
-                        self.log("".join(lines).strip())
-                    self.log('```')
-
-    def execute_focus(self, targets):
-        """Deep dive analysis on localized targeted file blocks."""
-        self.log("# REPO RIPPER TARGETED FOCUS PAYLOAD")
-        self.log(f"Target Directory Base: `{self.target_dir}`")
-        self.log("\n---")
-        
-        for target in targets:
-            full_path = os.path.join(self.target_dir, target)
-            if os.path.isfile(full_path):
-                if self.is_sensitive_file(full_path):
-                    self.log(f"\n### FILE DUMP DEFENSE TRIGGERED\n[SECURITY BLOCKED]: Refusing to extract contents of sensitive configuration asset: {target}")
-                else:
-                    ext = os.path.splitext(target)[1].replace('.', '')
-                    syntax = "text"
-                    if ext in ['tf', 'tofu']: syntax = "hcl"
-                    elif ext in ['yml', 'yaml']: syntax = "yaml"
-                    elif ext in ['sh', 'bash']: syntax = "bash"
-                    elif ext in ['py']: syntax = "python"
-                    elif ext in ['md']: syntax = "markdown"
-
-                    self.log(f"\n### FILE DUMP: {target}")
-                    self.log(f"```{syntax}")
-                    with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        self.log(f.read().strip())
-                    self.log('```')
-            elif os.path.isdir(full_path):
-                self.log(f"\n### DIRECTORY ANALYSIS: {target}")
-                self.log('```text')
-                self.generate_native_tree(full_path)
-                self.log('```')
-            else:
-                self.log(f"Warning: File or folder not found: {target}")
-
     def execute_list(self):
         self.log("\n## REMOTE LIVE MERGE/PULL REQUEST REFERENCES")
-        self.log("Querying remote tracking endpoints without API tokens...")
-        self.log('```text')
-        remote_refs = self.run_cmd(['git', 'ls-remote', 'origin', 'refs/merge-requests/*/head', 'refs/pull/*/head', 'refs/pull-requests/*/from'])
-        if not remote_refs or remote_refs == "TIMEOUT":
-            self.log("No remote open request tracking references detected or remote origin unreachable.")
-        else:
+        try:
+            proc = subprocess.Popen(['git', 'ls-remote', 'origin', 'refs/merge-requests/*/head', 'refs/pull/*/head'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.target_dir)
+            stdout, _ = proc.communicate(timeout=10)
+            remote_refs = stdout.decode('utf-8', errors='ignore').strip()
+            
+            self.log("```text")
             for line in remote_refs.splitlines():
                 parts = line.split()
                 if len(parts) >= 2:
                     ref = parts[1]
-                    clean_ref = ref.replace('refs/merge-requests/', '').replace('refs/pull/', '').replace('refs/pull-requests/', '').replace('/head', '').replace('/from', '')
+                    clean_ref = ref.replace('refs/merge-requests/', '').replace('refs/pull/', '').replace('/head', '')
                     self.log(f"ID: {clean_ref}")
-        self.log('```')
-
-    def execute_rules(self):
-        self.log("\n## REPOSITORY GOVERNANCE AND NAMING CONVENTIONS")
-        for root, _, files in os.walk(self.target_dir):
-            if any(p in root for p in ['.git', 'node_modules', 'venv']): continue
-            for f in files:
-                if any(x in f.lower() for x in ['naming', 'convention']) or f in ["CONTRIBUTING.md", "cspell.json"]:
-                    rel_path = os.path.relpath(os.path.join(root, f), self.target_dir)
-                    self.log(f"### Governance Asset: {rel_path}")
-                    self.log('```text')
-                    with open(os.path.join(root, f), 'r', encoding='utf-8', errors='ignore') as gf:
-                        head = [gf.readline() for _ in range(60)]
-                        self.log("".join(head).strip())
-                    self.log('```')
-        
-        hook_path = os.path.join(self.target_dir, "tools/check_names.py")
-        if os.path.isfile(hook_path):
-            self.log("### Automated Validation Hook: tools/check_names.py")
-            self.log('```python')
-            with open(hook_path, 'r', encoding='utf-8') as hf:
-                for line in hf:
-                    if any(w in line for w in ["regex", "pattern", "convention", "validate", "def "]):
-                        self.log(line.strip())
-            self.log('```')
-
-    def execute_diff(self):
-        self.log("\n## UNSTAGED WORKING DIRECTORY CHANGES")
-        self.log('```diff')
-        diff_out = self.run_cmd(['git', 'diff'])
-        self.log("\n".join(diff_out.splitlines()[:100]))
-        self.log('```')
-
-    def execute_sig(self):
-        self.log("\n## CODE INTERFACE SIGNATURES")
-        self.log('```text')
-        for root, _, files in os.walk(self.target_dir):
-            if any(p in root for p in ['.git', 'node_modules', 'venv']): continue
-            for f in files:
-                if f.endswith(('.tf', '.py', '.sh')):
-                    rel = os.path.relpath(os.path.join(root, f), self.target_dir)
-                    self.log(f"=== File: {rel} ===")
-                    with open(os.path.join(root, f), 'r', encoding='utf-8', errors='ignore') as sf:
-                        count = 0
-                        for line in sf:
-                            if any(line.startswith(x) for x in ["output ", "module ", "variable ", "def ", "function "]):
-                                self.log(line.strip())
-                                count += 1
-                                if count >= 15: break
-        self.log('```')
-
-    def execute_pr(self):
-        base_branch = "master" if "master" in self.run_cmd(['git', 'branch', '-a']) else "main"
-        self.log("\n## ACTIVE BRANCH / PR MODIFICATIONS")
-        self.log(f"### Modified Files Map (vs {base_branch}):")
-        self.log('```text')
-        self.log(self.run_cmd(['git', 'diff', f'{base_branch}...HEAD', '--stat']))
-        self.log('```')
-        
-        modified_files = self.run_cmd(['git', 'diff', f'{base_branch}...HEAD', '--name-only']).splitlines()
-        for mf in modified_files:
-            fpath = os.path.join(self.target_dir, mf)
-            if os.path.isfile(fpath):
-                if self.is_sensitive_file(fpath):
-                    self.log(f"#### Unsafe File Blocked: {mf}\n[SECURITY GUARDRAIL]: Redacted plaintext secret profile.")
-                else:
-                    self.log(f"#### Modified File Content: {mf}")
-                    self.log('```')
-                    with open(fpath, 'r', encoding='utf-8', errors='ignore') as f:
-                        lines = [f.readline() for _ in range(200)]
-                        self.log("".join(lines).strip())
-                    self.log('```')
-
-    def execute_mr(self, mr_id):
-        base_branch = "master" if "master" in self.run_cmd(['git', 'branch', '-a']) else "main"
-        
-        print(f"Syncing tracking baseline with origin/{base_branch}...")
-        if self.run_cmd(['git', 'fetch', 'origin', f'{base_branch}:{base_branch}']) == "TIMEOUT":
-            self.log("Aborted: Remote repository baseline sync timed out.")
-            return
-
-        print(f"Streaming remote request delta for ID {mr_id}...")
-        fetched = False
-        for ref_spec in [f'refs/merge-requests/{mr_id}/head:mr-{mr_id}-delta', f'refs/pull/{mr_id}/head:mr-{mr_id}-delta', f'refs/pull-requests/{mr_id}/from:mr-{mr_id}-delta']:
-            res = self.run_cmd(['git', 'fetch', 'origin', ref_spec])
-            if res == "TIMEOUT":
-                self.log("Aborted: Fetch connection broke due to a network timeout.")
-                return
-            
-            # Check if temporary delta branch successfully materialized locally
-            if self.run_cmd(['git', 'branch', '--list', f'mr-{mr_id}-delta']):
-                fetched = True
-                break
-                
-        if fetched:
-            self.log(f"\n## REMOTE PULL/MERGE REQUEST !{mr_id} CONTEXT")
-            self.log(f"### Summary of Changes (vs {base_branch}):")
-            self.log('```text')
-            self.log(self.run_cmd(['git', 'diff', f'{base_branch}...mr-{mr_id}-delta', '--stat']))
-            self.log('```')
-            self.log("\n### LINE-BY-LINE PATCH CHANGES (+/-):")
-            self.log('```diff')
-            self.log("\n".join(self.run_cmd(['git', 'diff', f'{base_branch}...mr-{mr_id}-delta']).splitlines()[:300]))
-            self.log('```')
-            
-            mod_files = self.run_cmd(['git', 'diff', f'{base_branch}...mr-{mr_id}-delta', '--name-only']).splitlines()
-            for mf in mod_files:
-                if self.is_sensitive_file(mf):
-                    self.log(f"#### File Body Redacted: {mf}\n[SECURITY GUARDRAIL]: Suppressed remote tracking payload.")
-                else:
-                    self.log(f"#### File Body: {mf}")
-                    self.log('```text')
-                    self.log("\n".join(self.run_cmd(['git', 'show', f'mr-{mr_id}-delta:{mf}']).splitlines()[:150]))
-                    self.log('```')
-            self.run_cmd(['git', 'branch', '-D', f'mr-{mr_id}-delta'])
-        else:
-            self.log(f"\n## REMOTE PULL/MERGE REQUEST CONTEXT\nError: Could not locate remote references for ID {mr_id}.")
-
-    def execute_trace(self, trace_input):
-        self.log("\n## DIAGNOSTIC ERROR TRACE ENGINE PAYLOAD")
-        raw_error = ""
-        if os.path.isfile(trace_input):
-            with open(trace_input, 'r', encoding='utf-8', errors='ignore') as tf:
-                raw_error = tf.read()
-        else:
-            raw_error = trace_input
-
-        self.log("### RAW LOG ANALYSIS FRAGMENT:")
-        self.log('```text')
-        self.log("\n".join(raw_error.splitlines()[:15]))
-        self.log('```')
-        self.log("\n### ISOLATED WORKSPACE SOURCE BREAKS:")
-        
-        matches = re.findall(r'([a-zA-Z0-9_\/-]+\.(?:tf|tofu|py|sh|yml|yaml|json|md))(?:, line ([0-9]+)| line ([0-9]+)|:([0-9]+))?', raw_error)
-        unique_hits = sorted(list(set(matches)), key=lambda x: x[0])
-        
-        for hit in unique_hits:
-            file_hit = hit[0]
-            line_hit = next((lk for lk in hit[1:] if lk), None)
-            full_path = os.path.join(self.target_dir, file_hit)
-            
-            if os.path.isfile(full_path):
-                if self.is_sensitive_file(full_path):
-                    self.log(f"#### Redacted Sensitive Breaking File: {file_hit}")
-                else:
-                    ext = os.path.splitext(file_hit)[1].replace('.', '')
-                    syntax = "hcl" if ext in ['tf', 'tofu'] else ("bash" if ext == 'sh' else ("python" if ext == 'py' else "text"))
-                    self.log(f"#### Code Context Window: {file_hit} (Failing Line Target: {line_hit or 1})")
-                    self.log(f"```{syntax}")
-                    
-                    with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                        lines = f.read().splitlines()
-                        
-                    if line_hit:
-                        lh = int(line_hit)
-                        start_w = max(0, lh - 11)
-                        end_w = min(len(lines), lh + 10)
-                        for idx in range(start_w, end_w):
-                            self.log(f"{idx+1}: {lines[idx]}")
-                    else:
-                        for idx in range(min(40, len(lines))):
-                            self.log(f"{idx+1}: {lines[idx]}")
-                    self.log('```')
+            self.log("```")
+        except Exception:
+            self.log("Remote origin references unreachable or timed out.")
 
     def execute_apply(self):
-        """Native Text-Anchor matching engine: 100% Robust, zero regex required."""
         self.log("\n## ACTIVE AGENTIC TEXT-ANCHOR WRITE EXECUTION INITIALIZED")
-        raw_clipboard = self.read_clipboard()
-        clean_content = raw_clipboard.replace('\xa0', ' ').replace('\r\n', '\n')
+        try:
+            raw_clipboard = subprocess.check_output(['pbpaste']).decode('utf-8', errors='ignore')
+        except Exception: return
         
+        clean_content = raw_clipboard.replace('\xa0', ' ').replace('\r\n', '\n')
         lines = clean_content.splitlines()
-        current_file = None
-        search_block = []
-        replace_block = []
-        state = "OUTSIDE"
-        applied_count = 0
+        current_file, search_block, replace_block, state, applied_count = None, [], [], "OUTSIDE", 0
 
         for line in lines:
             if line.startswith("#FILE:"):
                 current_file = line.replace("#FILE:", "").strip()
             elif line.startswith("<<<<<<< SEARCH"):
-                state = "SEARCH"
-                search_block = []
+                state, search_block = "SEARCH", []
             elif line.startswith("======="):
-                state = "REPLACE"
-                replace_block = []
+                state, replace_block = "REPLACE", []
             elif line.startswith(">>>>>>> REPLACE"):
                 state = "OUTSIDE"
-                if not current_file:
-                    self.log("Error: Block encountered before specifying a valid #FILE: marker path string.")
-                    continue
+                if not current_file: continue
                 
                 full_path = os.path.join(self.target_dir, current_file)
-                s_str = "\n".join(search_block)
-                r_str = "\n".join(replace_block)
+                s_str, r_str = "\n".join(search_block), "\n".join(replace_block)
 
-                if not os.path.exists(full_path):
-                    if not s_str:
-                        dirname = os.path.dirname(full_path)
-                        if dirname:
-                            os.makedirs(dirname, exist_ok=True)
-                        with open(full_path, 'w', encoding='utf-8') as nf:
-                            nf.write(r_str + "\n")
-                        self.log(f"Success: Spawned brand new file asset from scratch: {current_file}")
-                        applied_count += 1
-                        continue
-                    else:
-                        self.log(f"Error: Target file reference does not exist on disk: {current_file}")
-                        continue
-
-                with open(full_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    f_content = f.read()
-
-                if s_str in f_content:
-                    f_content = f_content.replace(s_str, r_str)
-                    with open(full_path, 'w', encoding='utf-8') as f:
-                        f.write(f_content)
-                    self.log(f"Success: Seamlessly patched file asset: {current_file}")
+                if not os.path.exists(full_path) and not s_str:
+                    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                    with open(full_path, 'w', encoding='utf-8') as nf: nf.write(r_str + "\n")
+                    print(f"Success: Created new file: {current_file}")
                     applied_count += 1
-                else:
-                    self.log(f"Error: Text-Anchor matching failed. SEARCH block string context not found in: {current_file}")
-            else:
-                if state == "SEARCH":
-                    search_block.append(line)
-                elif state == "REPLACE":
-                    replace_block.append(line)
-
-        if applied_count > 0:
-            self.log(f"\nExecution Complete: Successfully synchronized {applied_count} codebase partitions.")
-        else:
-            self.log("\nAborted: No modifications were made. Ensure clipboard layout conforms to SEARCH/REPLACE schemas.")
-
+                elif os.path.exists(full_path):
+                    with open(full_path, 'r', encoding='utf-8', errors='ignore') as f: f_content = f.read()
+                    if s_str in f_content:
+                        with open(full_path, 'w', encoding='utf-8') as f: f.write(f_content.replace(s_str, r_str))
+                        print(f"Success: Patched file: {current_file}")
+                        applied_count += 1
+        print(f"\nExecution Complete: Synchronized {applied_count} workspace mutations.")
 
 def main():
-    parser = argparse.ArgumentParser(description="Repo Ripper v4.2 - Enterprise Code Agent Companion")
-    parser.add_argument('target_dir', help="Path to target directory workspace.")
-    parser.add_argument('--copy', action='store_true', help="Pipe output streams straight to clipboard storage silently.")
-    parser.add_argument('--focus', nargs='+', help="Extract full raw text parameters of target files or sub-folders.")
-    parser.add_argument('--list', action='store_true', help="Perform non-token pull discovery loops.")
-    parser.add_argument('--rules', action='store_true', help="Pull down localized architecture and linting blueprints.")
-    parser.add_argument('--diff', action='store_true', help="Compile active local modifications frame analysis.")
-    parser.add_argument('--sig', action='store_true', help="Parse application block code visibility frames.")
-    parser.add_argument('--pr', action='store_true', help="Analyze current local branch changes versus upstream track baseline.")
-    parser.add_argument('--mr', help="Fetch and diff a specific remote Merge Request identifier cleanly.")
-    parser.add_argument('--trace', help="Feed an execution error log trail to isolate workspace failures.")
-    parser.add_argument('--apply', action='store_true', help="Apply anchor SEARCH/REPLACE clipboard modifications directly onto local assets.")
-    
+    parser = argparse.ArgumentParser(description="Repo Ripper v5.0 Lean")
+    parser.add_argument('target_dir')
+    parser.add_argument('--copy', action='store_true')
+    parser.add_argument('--list', action='store_true')
+    parser.add_argument('--apply', action='store_true')
     args = parser.parse_args()
 
     ripper = RepoRipper(args.target_dir, copy_to_clipboard=args.copy)
 
-    suppress_macro = any([args.focus, args.list, args.rules, args.diff, args.sig, args.pr, args.mr, args.trace, args.apply])
-
-    if args.focus:
-        ripper.execute_focus(args.focus)
-    elif args.apply:
-        ripper.append_header(suppress_macro=True)
+    if args.apply:
         ripper.execute_apply()
+    elif args.list:
+        ripper.append_header(suppress_tree=True)
+        ripper.execute_list()
+        ripper.print_payload()
     else:
-        ripper.append_header(suppress_macro=suppress_macro)
-        if args.list: ripper.execute_list()
-        if args.rules: ripper.execute_rules()
-        if args.diff: ripper.execute_diff()
-        if args.sig: ripper.execute_sig()
-        if args.pr: ripper.execute_pr()
-        if args.mr: ripper.execute_mr(args.mr)
-        if args.trace: ripper.execute_trace(args.trace)
-
-    ripper.print_payload()
+        ripper.append_header()
+        ripper.print_payload()
 
 if __name__ == "__main__":
     main()
