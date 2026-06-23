@@ -80,6 +80,15 @@ ripsnap() {
     echo "Success: Enclosed directory payload loaded to clipboard for the AI."
 }
 
+ripscreen() {
+    echo "Capturing active terminal history scrollback canvas..."
+    
+    # Leverages macOS native terminal automation descriptors
+    osascript -e 'tell application "Terminal" to get contents of selected tab of front window' | pbcopy
+    
+    echo "Success: Full terminal printout trail loaded to clipboard."
+}
+
 # Git Navigation Essentials
 alias gd='git diff'
 alias gs='git status'
