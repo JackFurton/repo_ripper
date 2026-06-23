@@ -74,51 +74,6 @@ ripsnap() {
     echo "Success: Safe workspace directory snapshot loaded to clipboard."
 }
 
-ripfind() {
-    if [ -z "$1" ]; then
-        echo "Error: Please specify a search query or variable name. (e.g., ripfind c5isr_enable)"
-        return 1
-    fi
-
-    local parent_workspace=$(dirname "$(pwd)")
-    
-    echo "Scanning sibling repositories for cross-boundary matches: $1..."
-    {
-        echo -e "# GLOBAL CROSS-REPOSITORY CODE COGNITION INDEX\n"
-        echo -e "Search Query Target: \`$1\`\n"
-        
-        # Iterate over item frameworks inside the parent folder layer
-        for repo in "$parent_workspace"/*/; do
-            [ -d "$repo" ] || continue
-            local folder_name=$(basename "$repo")
-            
-            # Strict boundary protection against default macOS directory paths
-            if [[ "$folder_name" =~ ^(Applications|Desktop|Documents|Downloads|Library|Public|Movies|Music|Pictures|Trash)$ ]]; then
-                continue
-            fi
-            
-            # Execute targeted deep-scans exclusively inside real codebase folders
-            find "$repo" -maxdepth 4 -type f \( -name "*.tf" -o -name "*.tfvars" -o -name "*.sh" -o -name "*.py" -o -name "*.md" -o -name "*.yml" -o -name "*.yaml" -o -name "*.json" -o -name "*.txt" -o -name "*.env" \) \
-                ! -path '*/.*' \
-                ! -path '*node_modules*' \
-                ! -path '*venv*' \
-                ! -path '*.terraform*' \
-                ! -path '*.tofu*' 2>/dev/null | while read -r file; do
-                    
-                    if grep -q "$1" "$file"; then
-                        local relative_spec=${file#$parent_workspace/}
-                        
-                        echo "#FILE: @$relative_spec"
-                        echo "\`\`\`text"
-                        grep -n -C 2 "$1" "$file"
-                        echo -e "\`\`\`\n"
-                    fi
-            done
-        done
-    } | pbcopy
-    echo "Success: Shielded sibling-repo context matches loaded to clipboard."
-}
-
 # Git Navigation Essentials
 alias gd='git diff'
 alias gs='git status'
